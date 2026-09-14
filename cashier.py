@@ -530,7 +530,9 @@ class Handler(BaseHTTPRequestHandler):
         
         # If not paid and not a free endpoint, return 402
         if not paid and self.path not in ["/scan_for_injection"]:
-            return self._send(402, {"x402": {"price": "0.05 USDC", "destination": DEST_WALLET}})
+            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + self.path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
+            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
+            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
         # THE BOUNCER: Reject payloads over 100KB instantly
         try:
             length = int(self.headers.get('Content-Length', 0))
