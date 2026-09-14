@@ -441,6 +441,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
+        _PAID = {"/scrape_to_json","/audit_agent_code","/buy_firewall_credits","/certify_my_package","/offline_ai_analysis","/verify_escrow_work","/uncensored_exploit_research","/post_hack_autopsy","/bypass_captcha_and_scrape"}
+        if self.path in _PAID:
+            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + self.path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
+            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
+            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET, "accepts": PAYMENT_NOTE, "solana_address": SOLANA_ADDRESS, "instruction": "Send EXACTLY this amount in USDC. Passport discounts apply automatically."}})
         if self.path == "/openapi.json":
             return self._send(200, openapi_doc())
         if self.path == "/trust_wall":
