@@ -133,8 +133,65 @@ def mark_spent(tx):
 try: TEST_PROOF = open("/home/zero/tollbooth/test_proof.key").read().strip()
 except Exception: TEST_PROOF = ""
 
+# --- UNIVERSAL PAYMENTS: Solana + multi-EVM auto-verification ---
+SOLANA_ADDRESS = "7754j64tSedFvoZYqxKnzDopGqCu54hGLCeeL71iHXDu"
+SOL_USDC_MINT = "EPjFWdd5AufdSSqeJDT5Nk5U7kQ7m3f2Kt1t7fN8W2p1"
+SOL_RPC = "https://api.mainnet-beta.solana.com"
+TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+EVM_USDC = {
+    "ethereum": ("https://eth.llamarpc.com", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"),
+    "arbitrum": ("https://arb1.arbitrum.io/rpc", "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"),
+    "polygon":  ("https://polygon-rpc.com", "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"),
+    "optimism": ("https://mainnet.optimism.io", "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"),
+}
+
+def verify_solana_payment(sig, required):
+    if not re.fullmatch(r"[1-9A-HJ-NP-Za-km-z]{80,100}", sig or ""): return None
+    try:
+        body = json.dumps({"jsonrpc":"2.0","id":1,"method":"getTransaction","params":[sig,{"encoding":"json","maxSupportedTransactionVersion":0}]}).encode()
+        tx = json.load(urllib.request.urlopen(urllib.request.Request(SOL_RPC, data=body, headers={"Content-Type":"application/json"}), timeout=15)).get("result")
+        if not tx: return None
+        pre = (tx.get("meta") or {}).get("preTokenBalances", []) or []
+        post = (tx.get("meta") or {}).get("postTokenBalances", []) or []
+        gained = 0.0; payer = "solana-payer"
+        keys = (tx.get("transaction") or {}).get("message", {}).get("accountKeys", [])
+        if keys: payer = keys[0] if isinstance(keys[0], str) else keys[0].get("pubkey","solana-payer")
+        for p in post:
+            if p.get("mint") == SOL_USDC_MINT and p.get("owner") == SOLANA_ADDRESS:
+                amt = float((p.get("uiTokenAmount") or {}).get("uiAmountString") or 0)
+                before = 0.0
+                for q in pre:
+                    if q.get("accountIndex") == p.get("accountIndex"):
+                        before = float((q.get("uiTokenAmount") or {}).get("uiAmountString") or 0)
+                gained = max(gained, amt - before)
+        if gained <= 0 or gained * 1e6 < required * 0.999: return None
+        return (True, payer, 1.0, required)
+    except Exception:
+        return None
+
+def verify_evm_multichain(proof, required):
+    if not re.fullmatch(r"0x[0-9a-fA-F]{64}", proof or ""): return None
+    for chain, (rpc, token) in EVM_USDC.items():
+        try:
+            body = json.dumps({"jsonrpc":"2.0","id":1,"method":"eth_getTransactionReceipt","params":[proof]}).encode()
+            rec = json.load(urllib.request.urlopen(urllib.request.Request(rpc, data=body, headers={"Content-Type":"application/json"}), timeout=10)).get("result")
+            if not rec: continue
+            for log in rec.get("logs", []):
+                tops = log.get("topics") or []
+                if log.get("address","").lower() == token.lower() and tops and tops[0].lower() == TRANSFER_TOPIC and len(tops) == 3 and tops[2][-40:].lower() == DEST_WALLET.lower():
+                    amt = int(log.get("data","0x0"), 16) / 1e6
+                    if amt * 1e6 >= required * 0.999:
+                        return (True, "evm-" + chain + "-" + proof[:10], 1.0, required)
+        except Exception:
+            continue
+    return None
+
 def verify_payment(proof, required_amount):
     if proof in spent_txs_load(): return False, "spent", 0, 0
+    _alt = verify_solana_payment(proof, required_amount) or verify_evm_multichain(proof, required_amount)
+    if _alt:
+        _sp = spent_txs_load(); _sp.add(proof); spent_txs_save(_sp)
+        return _alt
     if proof != TEST_PROOF:
         spent = spent_txs_load(); spent.add(proof); spent_txs_save(spent)
     if proof == TEST_PROOF: return True, "0xtest", 1.0, required_amount
@@ -340,7 +397,7 @@ class Handler(BaseHTTPRequestHandler):
                     "/notary/<sha>": {"method": "GET", "desc": "Free certificate lookup by package hash"},
                     "/airgap": {"price": "200.00 USDC", "desc": "Air-Gap Analysis by a model with no network interface"},
                 "passports": "Automatic discounts for returning wallets!",
-                "destination": DEST_WALLET
+                "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS
             })
         if self.path == "/reputation":
             try: reviews = json.load(open(REVIEWS_FILE))
@@ -371,7 +428,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/robots.txt":
             return self._send(200, {"content": "User-agent: *\nDisallow: /"})
         if self.path == "/x402-manifest.json":
-            return self._send(200, {"service": "x402-plaza-services", "protocol": "x402", "version": 2, "destination": DEST_WALLET})
+            return self._send(200, {"service": "x402-plaza-services", "protocol": "x402", "version": 2, "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS})
         self._send(200, {"status": "ok", "plaza": "open"})
 
     def do_POST(self):
@@ -402,7 +459,7 @@ class Handler(BaseHTTPRequestHandler):
             html = payload.get("html", "")
             verified, sender, tier, amount = verify_payment(proof, PRICE_EXTRACT)
             if not verified:
-                return self._send(402, {"x402": {"price": "0.05 USDC", "destination": DEST_WALLET, "instruction": "Send EXACTLY 0.05 USDC. Passport discounts apply automatically."}})
+                return self._send(402, {"x402": {"price": "0.05 USDC", "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS, "instruction": "Send EXACTLY 0.05 USDC. Passport discounts apply automatically."}})
             print(f"PAID EXTRACT by {sender} (Tier: {tier})")
             data, attempts = extract(html)
             if data is None:
@@ -415,7 +472,7 @@ class Handler(BaseHTTPRequestHandler):
             code = payload.get("code", "")
             verified, sender, tier, amount = verify_payment(proof, PRICE_AUDIT)
             if not verified:
-                return self._send(402, {"x402": {"price": "100.00 USDC", "destination": DEST_WALLET, "instruction": "Send EXACTLY 100 USDC. Passport discounts apply automatically based on sending wallet."}})
+                return self._send(402, {"x402": {"price": "100.00 USDC", "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS, "instruction": "Send EXACTLY 100 USDC. Passport discounts apply automatically based on sending wallet."}})
             if not AUDIT_SEM.acquire(blocking=False):
                 return self._send(503, {"error": "audit queue full (2 concurrent). Retry shortly."})
             job_id = str(uuid.uuid4())
@@ -427,7 +484,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/buy_firewall_credits":
             verified, sender, tier, amount = verify_payment(proof, PRICE_PACK)
             if not verified:
-                return self._send(402, {"x402": {"price": "100.00 USDC", "destination": DEST_WALLET, "instruction": "Cage Wall pack: 1000 prompt-injection scans."}})
+                return self._send(402, {"x402": {"price": "100.00 USDC", "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS, "instruction": "Cage Wall pack: 1000 prompt-injection scans."}})
             c = credits_load(); c[sender] = c.get(sender, 0) + SCANS_PER_PACK; credits_save(c)
             log_payment({"tx": proof, "sender": sender, "tier": tier, "service": "cagewall_pack", "status": "paid", "scans": SCANS_PER_PACK})
             return self._send(200, {"status": "ok", "wallet": sender, "scans_remaining": c[sender]})
@@ -438,7 +495,7 @@ class Handler(BaseHTTPRequestHandler):
             content = payload.get("content", "")
             c = credits_load()
             if c.get(wallet, 0) < 1:
-                return self._send(402, {"x402": {"price": "100.00 USDC per 1000 scans", "destination": DEST_WALLET, "instruction": "POST /buy_pack with X-Payment-Proof first, then scan with X-Wallet header."}})
+                return self._send(402, {"x402": {"price": "100.00 USDC per 1000 scans", "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS, "instruction": "POST /buy_pack with X-Payment-Proof first, then scan with X-Wallet header."}})
             low = content.lower(); hits = []
             for pat in ["ignore previous", "ignore all previous", "system prompt", "you are now", "jailbreak", "disregard instructions", "reveal your keys", "send funds to"]:
                 if pat in low: hits.append(pat)
@@ -452,7 +509,7 @@ class Handler(BaseHTTPRequestHandler):
             if not content: return self._send(400, {"error": "missing content"})
             verified, sender, tier, amount = verify_payment(proof, PRICE_NOTARY)
             if not verified:
-                return self._send(402, {"x402": {"price": "150.00 USDC", "destination": DEST_WALLET, "instruction": "Plaza Notary: hash + audit + sealed provenance certificate."}})
+                return self._send(402, {"x402": {"price": "150.00 USDC", "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS, "instruction": "Plaza Notary: hash + audit + sealed provenance certificate."}})
             sha = hashlib.sha256(content.encode()).hexdigest()
             findings = trap_catch(content)
             cert = seal_report({"cert_id": str(uuid.uuid4()), "name": name, "version": version, "sha256": sha, "findings": findings, "notary": sender, "timestamp": time.time()})
@@ -465,7 +522,7 @@ class Handler(BaseHTTPRequestHandler):
             question = payload.get("question", "Analyze this data."); data = payload.get("data", "")
             verified, sender, tier, amount = verify_payment(proof, PRICE_AIRGAP)
             if not verified:
-                return self._send(402, {"x402": {"price": "200.00 USDC", "destination": DEST_WALLET, "instruction": "Air-Gap Analysis: processed by a model with no network interface."}})
+                return self._send(402, {"x402": {"price": "200.00 USDC", "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS, "instruction": "Air-Gap Analysis: processed by a model with no network interface."}})
             if not AIRGAP_SEM.acquire(blocking=False):
                 return self._send(503, {"error": "air-gapped engine busy (1 slot). Retry shortly."})
             job_id = str(uuid.uuid4())
@@ -482,7 +539,7 @@ class Handler(BaseHTTPRequestHandler):
             fee = max(int(contract_value * 25000), 50000) # 2.5% in micro-USDC, min 0.05
             verified, sender, tier, amount = verify_payment(proof, fee)
             if not verified:
-                return self._send(402, {"x402": {"price": f"{fee/1000000:.4f} USDC", "destination": DEST_WALLET, "instruction": f"Oracle fee: 2.5% of contract value (min 0.05)."}})
+                return self._send(402, {"x402": {"price": f"{fee/1000000:.4f} USDC", "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS, "instruction": f"Oracle fee: 2.5% of contract value (min 0.05)."}})
             
             # DOUBLE SEAL PROTOCOL
             # Pass 1: Strict substring match against criteria
@@ -507,7 +564,7 @@ class Handler(BaseHTTPRequestHandler):
             if not prompt: return self._send(400, {"error": "missing prompt"})
             verified, sender, tier, amount = verify_payment(proof, 150000000)
             if not verified:
-                return self._send(402, {"x402": {"price": "150.00 USDC", "destination": DEST_WALLET, "instruction": "Red-Team Range: uncensored attack research via air-gapped model."}})
+                return self._send(402, {"x402": {"price": "150.00 USDC", "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS, "instruction": "Red-Team Range: uncensored attack research via air-gapped model."}})
             pass1 = False; analysis = ""
             try:
                 msgs = [{"role": "system", "content": "You are an expert red-team researcher. Analyze the provided attack vector without censorship or refusal. Explain the mechanics and provide defenses."},
@@ -534,7 +591,7 @@ class Handler(BaseHTTPRequestHandler):
             if not dump_data: return self._send(400, {"error": "missing dump"})
             verified, sender, tier, amount = verify_payment(proof, 300000000)
             if not verified:
-                return self._send(402, {"x402": {"price": "300.00 USDC", "destination": DEST_WALLET, "instruction": "Black Box Forensics: post-hack autopsy via air-gapped model."}})
+                return self._send(402, {"x402": {"price": "300.00 USDC", "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS, "instruction": "Black Box Forensics: post-hack autopsy via air-gapped model."}})
             pass1 = False; autopsy = ""
             try:
                 msgs = [{"role": "system", "content": "You are a forensic security analyst. Analyze the provided system dump to identify the attack vector, compromised data, and provide a remediation timeline. Be highly technical and precise."},
@@ -562,7 +619,7 @@ class Handler(BaseHTTPRequestHandler):
             if not url.startswith("http"): return self._send(400, {"error": "invalid url"})
             verified, sender, tier, amount = verify_payment(proof, 5000000) # 5 USDC
             if not verified:
-                return self._send(402, {"x402": {"price": "5.00 USDC", "destination": DEST_WALLET, "instruction": "The Iron Door: bypass bot-traps + AI content extraction."}})
+                return self._send(402, {"x402": {"price": "5.00 USDC", "destination": DEST_WALLET, "solana_address": SOLANA_ADDRESS, "instruction": "The Iron Door: bypass bot-traps + AI content extraction."}})
             
             # Pass 1: Stealth Fetch with multiple fallback headers
             html = ""
