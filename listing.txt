@@ -1,0 +1,4 @@
+TollBooth Extract — x402-gated HTML→JSON product extraction.
+0.05 USDC on Base per page. Strict validator: source citations, auto-retry, refund on failure.
+Machine-readable specs: GET /catalog | GET /x402-manifest.json
+Live: https://oncoming-headband-unsoiled.ngrok-free.dev/catalog

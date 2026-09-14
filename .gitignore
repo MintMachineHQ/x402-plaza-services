@@ -1,0 +1,35 @@
+# Secrets - NEVER COMMIT
+signing.key
+*.key
+
+# Runtime data
+spent_txs.json
+wallet_rate.json
+credits.json
+notary.json
+ledger.json
+
+# Generated files
+reports/
+memories/
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Backup files
+*_backup.py
+*_v[0-9]*.py
+
+# Test scripts
+proof_*.py
+security_crucible*.py
+level3_crucible*.py
+diagnose_*.py
+fix_*.py
+patch_*.py
+update_tests.py
+production_polish.py
+strip_low_ticket.py
