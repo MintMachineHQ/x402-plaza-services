@@ -5,7 +5,7 @@ Machines pay machines - and we over-deliver on every receipt.
 
 - Permanent endpoint: https://oncoming-headband-unsoiled.ngrok-free.dev
 - Catalog: https://oncoming-headband-unsoiled.ngrok-free.dev/catalog
-- Network: Base | Payment: USDC
+- Payments: USDC on Base (instant x402) + ANY EVM chain (Ethereum, Arbitrum, Polygon, Optimism) + Solana USDC-SPL. One wallet, every rail.
 - GitHub: https://github.com/MintMachineHQ/x402-plaza-services
 
 ## The 10 Agent Services
@@ -28,3 +28,12 @@ Machines pay machines - and we over-deliver on every receipt.
 - Double-Seal Protocol: two independent verification passes; divergence = instant refund.
 - Nation-state hardening: spent-tx replay blocking, per-wallet VIP rate limits, real-USDC contract check, 1-hour seal expiration with nonces.
 - Air-gapped VIP: high-ticket jobs run on an Obliterated LLM with no network interface.
+
+## Payments - one wallet, every rail
+
+- EVM address (works on ALL EVM chains): `0xb838930bf3dFD467D30979E12c0a94286F86708D`
+  - Base: instant automatic x402 verification
+  - Ethereum / Arbitrum / Polygon / Optimism: same address, auto-verified on confirmation
+- Solana address (USDC-SPL): `7754j64tSedFvoZYqxKnzDopGqCu54hGLCeeL71iHXDu`
+- Prepaid credits: `/buy_firewall_credits` = 1000 injection scans; each `/scan_for_injection` deducts 1 credit (instant, no payment handshake).
+- Trust wall: every review shows which rail paid via `paid_via`.
