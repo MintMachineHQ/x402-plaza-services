@@ -195,6 +195,28 @@ def rails_load():
 def rail_stamp(key, rail):
     r = rails_load(); r[key] = rail; json.dump(r, open(RAILS_FILE, "w"))
 
+def openapi_doc():
+    P = {}
+    def fixed(a): return {"mode": "fixed", "currency": "USD", "amount": a}
+    def add(path, price, props, required, summary):
+        P[path] = {"post": {
+            "operationId": path.strip("/").replace("/", "_"),
+            "summary": summary, "tags": ["agent-services"],
+            "x-payment-info": {"price": price, "protocols": [{"x402": {}}]},
+            "requestBody": {"required": True, "content": {"application/json": {"schema": {"type": "object", "properties": props, "required": required}}}},
+            "responses": {"200": {"description": "Sealed service result"}, "402": {"description": "Payment Required"}}}}
+    S = {"type": "string"}
+    add("/scrape_to_json", fixed("0.050000"), {"html": S}, ["html"], "Extract clean JSON from messy HTML")
+    add("/audit_agent_code", fixed("100.000000"), {"code": S}, ["code"], "Security audit for backdoors and data drains")
+    add("/buy_firewall_credits", fixed("100.000000"), {"wallet": S}, [], "Buy 1000 prompt-injection scans")
+    add("/certify_my_package", fixed("150.000000"), {"name": S, "content": S}, ["name", "content"], "Cryptographic seal of origin for packages")
+    add("/offline_ai_analysis", fixed("200.000000"), {"prompt": S}, ["prompt"], "AI analysis by air-gapped model")
+    add("/verify_escrow_work", {"mode": "dynamic", "currency": "USD", "min": "0.050000", "max": "25000.000000"}, {"contract_value": {"type": "number"}, "criteria": {"type": "object"}, "evidence": S}, ["contract_value", "criteria", "evidence"], "Escrow oracle verification")
+    add("/uncensored_exploit_research", fixed("150.000000"), {"prompt": S}, ["prompt"], "Exploit research by air-gapped AI")
+    add("/post_hack_autopsy", fixed("300.000000"), {"memory_dump": S}, ["memory_dump"], "Forensic breach autopsy")
+    add("/bypass_captcha_and_scrape", fixed("5.000000"), {"url": S}, ["url"], "Bypass captcha and return clean Markdown")
+    return {"openapi": "3.1.0", "info": {"title": "X402 Plaza Services", "contact": {"email": "Nonstopincome4@gmail.com"}, "version": "6.1.0", "description": "Premium agent services. Universal EVM wallet plus Solana USDC-SPL. Double-seal protocol with automatic refunds.", "x-guidance": "POST JSON with X-Payment-Proof header containing a settled USDC tx hash on Base, or Solana signature. Unpaid calls return HTTP 402. GET /catalog for prices, GET /trust_wall for reviews with paid_via badges. EVM: 0xb838930bf3dFD467D30979E12c0a94286F86708D (Base/ETH/ARB/POLY/OP). Solana: 7754j64tSedFvoZYqxKnzDopGqCu54hGLCeeL71iHXDu."}, "components": {"securitySchemes": {"siwx": {"type": "apiKey", "in": "header", "name": "X-Wallet"}}}, "paths": P}
+
 def verify_payment(proof, required_amount):
     if proof in spent_txs_load(): return False, "spent", 0, 0
     _alt = verify_solana_payment(proof, required_amount) or verify_evm_multichain(proof, required_amount)
@@ -369,6 +391,29 @@ class Handler(BaseHTTPRequestHandler):
         return self.headers.get("X-Forwarded-For", self.client_address[0]).split(",")[0].strip()
 
     def _send(self, code, obj):
+
+        if code == 402 and isinstance(obj, dict):
+            _x = obj.get("x402") if isinstance(obj.get("x402"), dict) else {}
+            try: _usdc = float(str(_x.get("price", "0.05 USDC")).split()[0].replace(",", ""))
+            except Exception: _usdc = 0.05
+            if _usdc <= 0: _usdc = 0.05
+            _atomic = str(int(round(_usdc * 1000000)))
+            obj["x402Version"] = 2
+            obj["error"] = "X-Payment-Proof header with a settled USDC transaction is required"
+            obj["accepts"] = [{
+                "scheme": "exact", "network": "base",
+                "maxAmountRequired": _atomic, "amount": _atomic,
+                "resource": getattr(self, "path", "/"),
+                "description": "X402 Plaza Services - machine-payable agent service",
+                "mimeType": "application/json", "payTo": DEST_WALLET,
+                "maxTimeoutSeconds": 60,
+                "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                "extra": {"solana_address": SOLANA_ADDRESS, "evm_chains": ["base","ethereum","arbitrum","polygon","optimism"]},
+                "outputSchema": {
+                    "input": {"type": "object", "properties": {}, "required": []},
+                    "output": {"type": "object", "properties": {"result": {"type": "object"}, "seal": {"type": "string"}}}
+                }
+            }]
         body = json.dumps(obj, indent=2).encode()
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
@@ -386,6 +431,8 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        if self.path == "/openapi.json":
+            return self._send(200, openapi_doc())
         if self.path == "/trust_wall":
             try: reviews = json.load(open(REVIEWS_FILE))
             except Exception: reviews = []
