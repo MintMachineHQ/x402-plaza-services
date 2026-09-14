@@ -387,7 +387,17 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if not rate_ok(self.client_ip()): return self._send(429, {"error": "rate limit: 30 req/min"})
-        if self.path == "/catalog":
+        
+        if self.path == "/trust_wall" and self.command == "GET":
+            try: reviews = json.load(open(REVIEWS_FILE))
+            except Exception: reviews = []
+            _rl = rails_load()
+            for _e in reviews:
+                if isinstance(_e, dict) and "paid_via" not in _e:
+                    _e["paid_via"] = _rl.get(_e.get("wallet") or _e.get("sender") or "", "base")
+            return self._send(200, {"reviews": reviews, "count": len(reviews)})
+
+if self.path == "/catalog":
             return self._send(200, {
                 "service": "X402 Plaza Services", "network": "base",
                 "endpoints": {
