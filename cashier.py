@@ -434,15 +434,25 @@ class Handler(BaseHTTPRequestHandler):
             pass
 
     def do_HEAD(self):
+        _raw_path = self.path
+        if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
+        _base_path = self.path.split("?")[0]
+        _PAID = {"/scrape_to_json","/audit_agent_code","/buy_firewall_credits","/certify_my_package","/offline_ai_analysis","/verify_escrow_work","/uncensored_exploit_research","/post_hack_autopsy","/bypass_captcha_and_scrape"}
+        if _base_path in _PAID:
+            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _base_path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
+            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
+            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", "0")
         self.end_headers()
 
     def do_GET(self):
+        _raw_path = self.path
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
+        _base_path = self.path.split("?")[0]
         _PAID = {"/scrape_to_json","/audit_agent_code","/buy_firewall_credits","/certify_my_package","/offline_ai_analysis","/verify_escrow_work","/uncensored_exploit_research","/post_hack_autopsy","/bypass_captcha_and_scrape"}
-        if self.path in _PAID:
+        if _base_path in _PAID:
             _pi = openapi_doc()["paths"].get("/X402PlazaServices" + self.path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
             _amt = _pi.get("amount") or _pi.get("min") or "0.05"
             return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET, "accepts": PAYMENT_NOTE, "solana_address": SOLANA_ADDRESS, "instruction": "Send EXACTLY this amount in USDC. Passport discounts apply automatically."}})
