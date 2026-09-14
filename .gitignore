@@ -33,3 +33,4 @@ patch_*.py
 update_tests.py
 production_polish.py
 strip_low_ticket.py
+test_proof.key
