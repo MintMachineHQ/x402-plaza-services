@@ -215,6 +215,7 @@ def openapi_doc():
     add("/uncensored_exploit_research", fixed("150.000000"), {"prompt": S}, ["prompt"], "Exploit research by air-gapped AI")
     add("/post_hack_autopsy", fixed("300.000000"), {"memory_dump": S}, ["memory_dump"], "Forensic breach autopsy")
     add("/bypass_captcha_and_scrape", fixed("5.000000"), {"url": S}, ["url"], "Bypass captcha and return clean Markdown")
+        P = {("/X402PlazaServices" + k): v for k, v in P.items()}
     return {"openapi": "3.1.0", "info": {"title": "X402 Plaza Services", "contact": {"email": "Nonstopincome4@gmail.com"}, "version": "6.1.0", "description": "Premium agent services. Universal EVM wallet plus Solana USDC-SPL. Double-seal protocol with automatic refunds.", "x-guidance": "POST JSON with X-Payment-Proof header containing a settled USDC tx hash on Base, or Solana signature. Unpaid calls return HTTP 402. GET /catalog for prices, GET /trust_wall for reviews with paid_via badges. EVM: 0xb838930bf3dFD467D30979E12c0a94286F86708D (Base/ETH/ARB/POLY/OP). Solana: 7754j64tSedFvoZYqxKnzDopGqCu54hGLCeeL71iHXDu."}, "components": {"securitySchemes": {"siwx": {"type": "apiKey", "in": "header", "name": "X-Wallet"}}}, "paths": P}
 
 def verify_payment(proof, required_amount):
@@ -418,6 +419,14 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
+        # x402 v2 challenge headers (required by x402scan probe)
+        if code == 402 and isinstance(obj, dict) and "accepts" in obj:
+            _ac = obj["accepts"]
+            if isinstance(_ac, list) and _ac:
+                _f = _ac[0]
+                www = f'x402 version="2", network="{_f.get("network","base")}", resource="{_f.get("resource",self.path)}", description="X402 Plaza Services", amount="{_f.get("amount","0")}", asset="{_f.get("asset","")}", payTo="{_f.get("payTo","")}"'
+                self.send_header("WWW-Authenticate", www)
+                self.send_header("X-402-Status", "payment_required")
         self.end_headers()
         try:
             self.wfile.write(body)
@@ -431,6 +440,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
         if self.path == "/openapi.json":
             return self._send(200, openapi_doc())
         if self.path == "/trust_wall":
@@ -500,6 +510,7 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, {"status": "ok", "plaza": "open"})
 
     def do_POST(self):
+        if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
 
         # Early payment gate: require payment proof for all paid endpoints
         proof = self.headers.get("X-Payment-Proof", "")
