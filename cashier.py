@@ -558,7 +558,9 @@ class Handler(BaseHTTPRequestHandler):
             html = payload.get("html", "")
             verified, sender, tier, amount = verify_payment(proof, PRICE_EXTRACT)
             if not verified:
-                return self._send(402, {"x402": {"price": "0.05 USDC", "destination": DEST_WALLET, "accepts": PAYMENT_NOTE, "solana_address": SOLANA_ADDRESS, "instruction": "Send EXACTLY 0.05 USDC. Passport discounts apply automatically."}})
+                _pi = openapi_doc()["paths"].get("/X402PlazaServices" + self.path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
+            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
+            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET, "accepts": PAYMENT_NOTE, "solana_address": SOLANA_ADDRESS, "instruction": "Send EXACTLY this amount in USDC. Passport discounts apply automatically."}})
             print(f"PAID EXTRACT by {sender} (Tier: {tier})")
             data, attempts = extract(html)
             if data is None:
