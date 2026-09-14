@@ -500,6 +500,21 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, {"status": "ok", "plaza": "open"})
 
     def do_POST(self):
+
+        # Early payment gate: require payment proof for all paid endpoints
+        proof = self.headers.get("X-Payment-Proof", "")
+        paid = False
+        if proof:
+            ok, sender, paid_usd, _ = verify_payment(proof)
+            if ok:
+                paid = True
+                tier = get_tier(sender.lower())[1]
+            else:
+                paid = False
+        
+        # If not paid and not a free endpoint, return 402
+        if not paid and self.path not in ["/scan_for_injection"]:
+            return self._send(402, {"x402": {"price": "0.05 USDC", "destination": DEST_WALLET}})
         # THE BOUNCER: Reject payloads over 100KB instantly
         try:
             length = int(self.headers.get('Content-Length', 0))
