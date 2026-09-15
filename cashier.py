@@ -404,7 +404,7 @@ class Handler(BaseHTTPRequestHandler):
             obj["accepts"] = [{
                 "scheme": "exact", "network": "base",
                 "maxAmountRequired": _atomic, "amount": _atomic,
-                "resource": {"url": "https://oncoming-headband-unsoiled.ngrok-free.dev" + getattr(self, "_raw_path", "/").split("?")[0], "description": "X402 Plaza Services - machine-payable agent service", "mimeType": "application/json"},
+                "resource": {"url": "https://oncoming-headband-unsoiled.ngrok-free.dev" + _raw_path.split("?")[0] if "_raw_path" in dir() else getattr(self, "path", "/").split("?")[0], "description": "X402 Plaza Services - machine-payable agent service", "mimeType": "application/json"},
                 "description": "X402 Plaza Services - machine-payable agent service",
                 "mimeType": "application/json", "payTo": DEST_WALLET,
                 "maxTimeoutSeconds": 60,
@@ -525,6 +525,7 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, {"status": "ok", "plaza": "open"})
 
     def do_POST(self):
+        _raw_path = self.path
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
 
         # Early payment gate: require payment proof for all paid endpoints
