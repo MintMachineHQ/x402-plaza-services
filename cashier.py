@@ -420,7 +420,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         if code == 402 and isinstance(obj, dict):
-            self.send_header("WWW-Authenticate", getattr(self, "_x402_www", 'x402 version="2"'))
+            www_auth = getattr(self, "_x402_www", None)
+            if not www_auth:
+                _rurl = obj.get("resource", {}).get("url", "https://oncoming-headband-unsoiled.ngrok-free.dev/")
+                _amt = obj.get("accepts", [{}])[0].get("amount", "50000")
+                www_auth = f'x402 version="2", network="base", resource="{_rurl}", description="X402 Plaza Services", amount="{_amt}", asset="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", payTo="{DEST_WALLET}"'
+            self.send_header("WWW-Authenticate", www_auth)
             self.send_header("X-402-Status", "payment_required")
         self.end_headers()
         try:
@@ -428,6 +433,84 @@ class Handler(BaseHTTPRequestHandler):
         except BrokenPipeError:
             pass
 
+    def do_OPTIONS(self):
+        self._raw_path = self.path.split("?")[0]
+        if self._raw_path.startswith("/X402PlazaServices"):
+            _path = self._raw_path[len("/X402PlazaServices"):] or "/"
+        else:
+            _path = self._raw_path
+        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package",
+                 "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research",
+                 "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
+        if _path in _PAID:
+            proof = self.headers.get("X-Payment-Proof", "")
+            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
+            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
+            if not proof:
+                return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+            ok, sender, paid_usd, _ = verify_payment(proof, int(float(_amt) * 1000000))
+            if not ok:
+                return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Payment-Proof, X-Wallet")
+        self.send_header("Access-Control-Max-Age", "3600")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+    
+    def do_PUT(self):
+        self._raw_path = self.path.split("?")[0]
+        if self._raw_path.startswith("/X402PlazaServices"):
+            _path = self._raw_path[len("/X402PlazaServices"):] or "/"
+        else:
+            _path = self._raw_path
+        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package",
+                 "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research",
+                 "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
+        if _path in _PAID:
+            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
+            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
+            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+        self.send_response(405)
+        self.end_headers()
+    
+    def do_PATCH(self):
+        self._raw_path = self.path.split("?")[0]
+        if self._raw_path.startswith("/X402PlazaServices"):
+            _path = self._raw_path[len("/X402PlazaServices"):] or "/"
+        else:
+            _path = self._raw_path
+        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package",
+                 "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research",
+                 "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
+        if _path in _PAID:
+            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
+            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
+            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+        self.send_response(405)
+        self.end_headers()
+    
+    def do_DELETE(self):
+        self._raw_path = self.path.split("?")[0]
+        if self._raw_path.startswith("/X402PlazaServices"):
+            _path = self._raw_path[len("/X402PlazaServices"):] or "/"
+        else:
+            _path = self._raw_path
+        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package",
+                 "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research",
+                 "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
+        if _path in _PAID:
+            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
+            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
+            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+        self.send_response(405)
+        self.end_headers()
+
+        else:
+            self.send_response(405)
+            self.end_headers()
+    
     def do_HEAD(self):
         self._raw_path = self.path.split("?")[0]
         _raw_path = self.path.split("?")[0]
@@ -444,6 +527,21 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        # DEBUG LOGGING - capture every request for x402scan diagnosis
+        import datetime
+        _log_time = datetime.datetime.now().strftime("%H:%M:%S")
+        _log_method = self.command
+        _log_path = self.path
+        _log_headers = dict(self.headers)
+        print(f"[{_log_time}] {_log_method} {_log_path}")
+        print(f"  Headers: {dict((k, v[:80]) for k, v in _log_headers.items())}")
+        if self.command == "POST" and "Content-Length" in self.headers:
+            try:
+                _body_len = int(self.headers.get("Content-Length", 0))
+                if _body_len < 2000:
+                    print(f"  Body length: {_body_len}")
+            except: pass
+        
         self._raw_path = self.path.split("?")[0]
         _raw_path = self.path
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
