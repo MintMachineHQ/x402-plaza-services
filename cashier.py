@@ -437,6 +437,18 @@ class Handler(BaseHTTPRequestHandler):
         except BrokenPipeError:
             pass
 
+    MCP_NAMES = {
+        "scrape_to_json": "scrape.to_json",
+        "bypass_captcha_and_scrape": "scrape.bypass_captcha",
+        "audit_agent_code": "security.audit_agent_code",
+        "certify_my_package": "security.certify_package",
+        "uncensored_exploit_research": "security.exploit_research",
+        "post_hack_autopsy": "security.hack_autopsy",
+        "offline_ai_analysis": "analysis.offline_ai",
+        "verify_escrow_work": "escrow.verify_work",
+        "buy_firewall_credits": "credits.buy_firewall",
+    }
+
     def _mcp_tools(self):
         PARAM_DESC = {
             "url": "Target webpage URL to fetch (http or https).",
@@ -469,7 +481,7 @@ class Handler(BaseHTTPRequestHandler):
         for p, op in openapi_doc()["paths"].items():
             post = op.get("post", {})
             snake = p.replace("/X402PlazaServices/", "")
-            camel = re.sub(r"_([a-z])", lambda m: m.group(1).upper(), snake)
+            camel = self.MCP_NAMES.get(snake, "plaza." + snake)
             sch = post.get("requestBody", {}).get("content", {}).get("application/json", {}).get("schema", {})
             props = {}
             for k, v in sch.get("properties", {}).items():
@@ -512,7 +524,9 @@ class Handler(BaseHTTPRequestHandler):
             result = {"tools": self._mcp_tools()}
         elif method == "tools/call":
             params = body.get("params", {})
-            tname = re.sub(r"(?<!^)(?=[A-Z])", "_", params.get("name", "")).lower()
+            _rev = {v: k for k, v in self.MCP_NAMES.items()}
+            _rawname = params.get("name", "")
+            tname = _rev.get(_rawname, re.sub(r"(?<!^)(?=[A-Z])", "_", _rawname).lower())
             args = dict(params.get("arguments", {}))
             proof = args.pop("paymentProof", "") or args.pop("payment_proof", "")
             args = {re.sub(r"(?<!^)(?=[A-Z])", "_", k).lower(): v for k, v in args.items()}
