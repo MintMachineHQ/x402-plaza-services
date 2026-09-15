@@ -404,7 +404,7 @@ class Handler(BaseHTTPRequestHandler):
             obj["accepts"] = [{
                 "scheme": "exact", "network": "base",
                 "maxAmountRequired": _atomic, "amount": _atomic,
-                "resource": {"url": getattr(self, "_raw_path", self.path.split("?")[0]), "description": "X402 Plaza Services - machine-payable agent service", "mimeType": "application/json"},
+                "resource": {"url": "https://oncoming-headband-unsoiled.ngrok-free.dev" + getattr(self, "_raw_path", self.path.split("?")[0]), "description": "X402 Plaza Services - machine-payable agent service", "mimeType": "application/json"},
                 "description": "X402 Plaza Services - machine-payable agent service",
                 "mimeType": "application/json", "payTo": DEST_WALLET,
                 "maxTimeoutSeconds": 60,
