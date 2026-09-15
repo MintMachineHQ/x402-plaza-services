@@ -421,6 +421,7 @@ class Handler(BaseHTTPRequestHandler):
         body = json.dumps(obj, indent=2).encode()
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
+        self.send_header("ngrok-skip-browser-warning", "true")
         self.send_header("Content-Length", str(len(body)))
         if code == 402 and isinstance(obj, dict):
             www_auth = getattr(self, "_x402_www", None)
