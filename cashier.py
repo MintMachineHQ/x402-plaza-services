@@ -404,7 +404,7 @@ class Handler(BaseHTTPRequestHandler):
             obj["accepts"] = [{
                 "scheme": "exact", "network": "base",
                 "maxAmountRequired": _atomic, "amount": _atomic,
-                "resource": {"url": "https://oncoming-headband-unsoiled.ngrok-free.dev" + getattr(self, "_raw_path", self.path.split("?")[0]), "description": "X402 Plaza Services - machine-payable agent service", "mimeType": "application/json"},
+                "resource": {"url": "https://oncoming-headband-unsoiled.ngrok-free.dev" + getattr(self, "_raw_path", "/").split("?")[0], "description": "X402 Plaza Services - machine-payable agent service", "mimeType": "application/json"},
                 "description": "X402 Plaza Services - machine-payable agent service",
                 "mimeType": "application/json", "payTo": DEST_WALLET,
                 "maxTimeoutSeconds": 60,
@@ -434,7 +434,7 @@ class Handler(BaseHTTPRequestHandler):
             pass
 
     def do_HEAD(self):
-        _raw_path = self.path
+        _raw_path = self.path.split("?")[0]
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
         _base_path = self.path.split("?")[0]
         _PAID = {"/scrape_to_json","/audit_agent_code","/buy_firewall_credits","/certify_my_package","/offline_ai_analysis","/verify_escrow_work","/uncensored_exploit_research","/post_hack_autopsy","/bypass_captcha_and_scrape"}
