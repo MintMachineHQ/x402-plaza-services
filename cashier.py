@@ -522,8 +522,34 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, {"status": "ok", "plaza": "open"})
 
     def do_POST(self):
-        self._raw_path = self.path.split("?")[0]
-        _raw_path = self.path
+        # HARD PAYMENT GATE: Check payment BEFORE anything else
+        _path = self.path.split("?")[0]
+        if _path.startswith("/X402PlazaServices"):
+            _path = _path[len("/X402PlazaServices"):] or "/"
+        
+        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package",
+                 "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research",
+                 "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
+        
+        if _path in _PAID:
+            # Check if payment proof exists
+            proof = self.headers.get("X-Payment-Proof", "")
+            if not proof:
+                # No payment proof - return 402 IMMEDIATELY without parsing body
+                _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
+                _amt = _pi.get("amount") or _pi.get("min") or "0.05"
+                return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+            
+            # Payment proof exists - verify it
+            ok, sender, paid_usd, _ = verify_payment(proof, _amt)
+            if not ok:
+                # Invalid payment - return 402
+                return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+            
+            # Payment verified - continue with original handler logic below
+        
+        # Original do_POST logic continues...
+
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
 
         # Early payment gate: require payment proof for all paid endpoints
