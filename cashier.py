@@ -399,34 +399,29 @@ class Handler(BaseHTTPRequestHandler):
             except Exception: _usdc = 0.05
             if _usdc <= 0: _usdc = 0.05
             _atomic = str(int(round(_usdc * 1000000)))
+            _origin = "https://oncoming-headband-unsoiled.ngrok-free.dev"
+            _rurl = _origin + getattr(self, "_raw_path", getattr(self, "path", "/"))
             obj["x402Version"] = 2
             obj["error"] = "X-Payment-Proof header with a settled USDC transaction is required"
+            obj["resource"] = {"url": _rurl, "description": "X402 Plaza Services - machine-payable agent service", "mimeType": "application/json"}
             obj["accepts"] = [{
                 "scheme": "exact", "network": "base",
-                "maxAmountRequired": _atomic, "amount": _atomic,
-                "resource": {"url": "https://oncoming-headband-unsoiled.ngrok-free.dev" + self.path.split("?")[0],
-                "description": "X402 Plaza Services - machine-payable agent service",
-                "mimeType": "application/json", "payTo": DEST_WALLET,
-                "maxTimeoutSeconds": 60,
+                "amount": _atomic, "maxAmountRequired": _atomic,
+                "payTo": DEST_WALLET, "maxTimeoutSeconds": 60,
                 "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                "extra": {"solana_address": SOLANA_ADDRESS, "evm_chains": ["base","ethereum","arbitrum","polygon","optimism"]},
-                "outputSchema": {
-                    "input": {"type": "object", "properties": {}, "required": []},
-                    "output": {"type": "object", "properties": {"result": {"type": "object"}, "seal": {"type": "string"}}}
-                }
+                "description": "X402 Plaza Services - machine-payable agent service",
+                "mimeType": "application/json",
+                "extra": {"solana_address": SOLANA_ADDRESS, "evm_chains": ["base", "ethereum", "arbitrum", "polygon", "optimism"]},
+                "outputSchema": {"input": {"type": "object", "properties": {}, "required": []}, "output": {"type": "object", "properties": {"result": {"type": "object"}, "seal": {"type": "string"}}}}
             }]
+            self._x402_www = f'x402 version="2", network="base", resource="{_rurl}", description="X402 Plaza Services", amount="{_atomic}", asset="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", payTo="{DEST_WALLET}"'
         body = json.dumps(obj, indent=2).encode()
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
-        # x402 v2 challenge headers (required by x402scan probe)
-        if code == 402 and isinstance(obj, dict) and "accepts" in obj:
-            _ac = obj["accepts"]
-            if isinstance(_ac, list) and _ac:
-                _f = _ac[0]
-                www = f'x402 version="2", network="{_f.get("network","base")}", resource="https://oncoming-headband-unsoiled.ngrok-free.dev" + getattr(self, "path", "/").split("?")[0], description="X402 Plaza Services", amount="{_f.get("amount","0")}", asset="{_f.get("asset","")}", payTo="{_f.get("payTo","")}"'
-                self.send_header("WWW-Authenticate", www)
-                self.send_header("X-402-Status", "payment_required")
+        if code == 402 and isinstance(obj, dict):
+            self.send_header("WWW-Authenticate", getattr(self, "_x402_www", 'x402 version="2"'))
+            self.send_header("X-402-Status", "payment_required")
         self.end_headers()
         try:
             self.wfile.write(body)
@@ -434,6 +429,7 @@ class Handler(BaseHTTPRequestHandler):
             pass
 
     def do_HEAD(self):
+        self._raw_path = self.path.split("?")[0]
         _raw_path = self.path.split("?")[0]
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
         _base_path = self.path.split("?")[0]
@@ -448,6 +444,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        self._raw_path = self.path.split("?")[0]
         _raw_path = self.path
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
         _base_path = self.path.split("?")[0]
@@ -525,6 +522,7 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, {"status": "ok", "plaza": "open"})
 
     def do_POST(self):
+        self._raw_path = self.path.split("?")[0]
         _raw_path = self.path
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
 
