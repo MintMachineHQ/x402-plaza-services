@@ -404,7 +404,7 @@ class Handler(BaseHTTPRequestHandler):
             obj["accepts"] = [{
                 "scheme": "exact", "network": "base",
                 "maxAmountRequired": _atomic, "amount": _atomic,
-                "resource": {"url": "https://oncoming-headband-unsoiled.ngrok-free.dev" + _raw_path.split("?")[0] if "_raw_path" in dir() else getattr(self, "path", "/").split("?")[0], "description": "X402 Plaza Services - machine-payable agent service", "mimeType": "application/json"},
+                "resource": {"url": "https://oncoming-headband-unsoiled.ngrok-free.dev" + self.path.split("?")[0],
                 "description": "X402 Plaza Services - machine-payable agent service",
                 "mimeType": "application/json", "payTo": DEST_WALLET,
                 "maxTimeoutSeconds": 60,
@@ -424,7 +424,7 @@ class Handler(BaseHTTPRequestHandler):
             _ac = obj["accepts"]
             if isinstance(_ac, list) and _ac:
                 _f = _ac[0]
-                www = f'x402 version="2", network="{_f.get("network","base")}", resource="{_f.get("resource",self.path)}", description="X402 Plaza Services", amount="{_f.get("amount","0")}", asset="{_f.get("asset","")}", payTo="{_f.get("payTo","")}"'
+                www = f'x402 version="2", network="{_f.get("network","base")}", resource="https://oncoming-headband-unsoiled.ngrok-free.dev" + getattr(self, "path", "/").split("?")[0], description="X402 Plaza Services", amount="{_f.get("amount","0")}", asset="{_f.get("asset","")}", payTo="{_f.get("payTo","")}"'
                 self.send_header("WWW-Authenticate", www)
                 self.send_header("X-402-Status", "payment_required")
         self.end_headers()
