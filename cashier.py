@@ -475,9 +475,9 @@ class Handler(BaseHTTPRequestHandler):
             for k, v in sch.get("properties", {}).items():
                 pv = dict(v)
                 pv["description"] = PARAM_DESC.get(k, f"Input value for {k}.")
-                props[k] = pv
-            props["payment_proof"] = {"type": "string", "description": PARAM_DESC["payment_proof"]}
-            req = list(sch.get("required", []))
+                props[re.sub(r"_([a-z])", lambda m: m.group(1).upper(), k)] = pv
+            props["paymentProof"] = {"type": "string", "description": PARAM_DESC["payment_proof"]}
+            req = [re.sub(r"_([a-z])", lambda m: m.group(1).upper(), k) for k in sch.get("required", [])]
             title, readonly = META.get(snake, (snake, False))
             tools.append({
                 "name": camel,
@@ -514,7 +514,8 @@ class Handler(BaseHTTPRequestHandler):
             params = body.get("params", {})
             tname = re.sub(r"(?<!^)(?=[A-Z])", "_", params.get("name", "")).lower()
             args = dict(params.get("arguments", {}))
-            proof = args.pop("payment_proof", "")
+            proof = args.pop("paymentProof", "") or args.pop("payment_proof", "")
+            args = {re.sub(r"(?<!^)(?=[A-Z])", "_", k).lower(): v for k, v in args.items()}
             hdrs = {"Content-Type": "application/json"}
             if proof: hdrs["X-Payment-Proof"] = proof
             import urllib.request as _u
