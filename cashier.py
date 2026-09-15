@@ -438,15 +438,61 @@ class Handler(BaseHTTPRequestHandler):
             pass
 
     def _mcp_tools(self):
+        PARAM_DESC = {
+            "url": "Target webpage URL to fetch (http or https).",
+            "html": "Raw HTML string to clean, if you already fetched the page yourself.",
+            "prompt": "Research question or task instruction for the air-gapped model.",
+            "code": "Source code text to audit or analyze.",
+            "package": "Package identifier, e.g. npm:name@version or pypi:name==version.",
+            "contract_value": "Escrow contract value in USD (0.05 to 5000000).",
+            "evidence": "Evidence bundle: URLs, hashes, or text proving the work was completed.",
+            "report": "Incident report, logs, or timeline text for forensic autopsy.",
+            "payment_proof": "USDC tx hash from any supported chain (base, ethereum, arbitrum, polygon, optimism, solana). Omit to receive a 402 price quote.",
+        }
+        OUT = {"type": "object", "properties": {
+            "result": {"type": "object", "description": "Structured service payload produced by the paid operation."},
+            "seal": {"type": "string", "description": "Cryptographic seal proving authenticity of this result."},
+            "price_usd": {"type": "string", "description": "USD amount settled for this call."},
+        }}
+        META = {
+            "scrape_to_json": ("Scrape To JSON", True),
+            "audit_agent_code": ("Audit Agent Code", True),
+            "buy_firewall_credits": ("Buy Firewall Credits", False),
+            "certify_my_package": ("Certify My Package", True),
+            "offline_ai_analysis": ("Offline AI Analysis", True),
+            "verify_escrow_work": ("Verify Escrow Work", True),
+            "uncensored_exploit_research": ("Uncensored Exploit Research", True),
+            "post_hack_autopsy": ("Post-Hack Autopsy", True),
+            "bypass_captcha_and_scrape": ("Bypass Captcha And Scrape", True),
+        }
         tools = []
         for p, op in openapi_doc()["paths"].items():
             post = op.get("post", {})
-            name = p.replace("/X402PlazaServices/", "")
+            snake = p.replace("/X402PlazaServices/", "")
+            camel = re.sub(r"_([a-z])", lambda m: m.group(1).upper(), snake)
             sch = post.get("requestBody", {}).get("content", {}).get("application/json", {}).get("schema", {})
-            props = dict(sch.get("properties", {}))
+            props = {}
+            for k, v in sch.get("properties", {}).items():
+                pv = dict(v)
+                pv["description"] = PARAM_DESC.get(k, f"Input value for {k}.")
+                props[k] = pv
+            props["payment_proof"] = {"type": "string", "description": PARAM_DESC["payment_proof"]}
             req = list(sch.get("required", []))
-            props["payment_proof"] = {"type": "string", "description": "USDC tx hash from any supported chain (Base, Ethereum, Arbitrum, Polygon, Optimism, or Solana). Omit to receive a 402 price quote."}
-            tools.append({"name": name, "description": post.get("summary", name), "inputSchema": {"type": "object", "properties": props, "required": req}})
+            title, readonly = META.get(snake, (snake, False))
+            tools.append({
+                "name": camel,
+                "title": title,
+                "description": post.get("summary", snake),
+                "inputSchema": {"type": "object", "properties": props, "required": req},
+                "outputSchema": OUT,
+                "annotations": {
+                    "title": title,
+                    "readOnlyHint": readonly,
+                    "destructiveHint": False,
+                    "idempotentHint": False,
+                    "openWorldHint": True,
+                },
+            })
         return tools
 
     def _handle_mcp(self):
@@ -459,14 +505,14 @@ class Handler(BaseHTTPRequestHandler):
         method = body.get("method", "")
         rid = body.get("id")
         if method == "initialize":
-            result = {"protocolVersion": "2025-06-18", "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "x402-plaza-services", "version": "1.0.0"}}
+            result = {"protocolVersion": "2025-06-18", "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "x402-plaza-services", "version": "1.0.0", "title": "X402 Plaza Services", "websiteUrl": "https://github.com/MintMachineHQ/x402-plaza-services", "description": "Machine-payable API tools for AI agents: scraping, code audits, package certification, forensics, escrow verification. Pay per call in USDC on six chains (Base, Ethereum, Arbitrum, Polygon, Optimism, Solana); unpaid calls return an x402 402 price quote.", "icons": [{"src": "https://raw.githubusercontent.com/MintMachineHQ/x402-plaza-services/main/icon.png", "mimeType": "image/png", "sizes": "128x128"}]}}
         elif method.startswith("notifications/"):
             self.send_response(202); self.send_header("Content-Length", "0"); self.end_headers(); return
         elif method == "tools/list":
             result = {"tools": self._mcp_tools()}
         elif method == "tools/call":
             params = body.get("params", {})
-            tname = params.get("name", "")
+            tname = re.sub(r"(?<!^)(?=[A-Z])", "_", params.get("name", "")).lower()
             args = dict(params.get("arguments", {}))
             proof = args.pop("payment_proof", "")
             hdrs = {"Content-Type": "application/json"}
