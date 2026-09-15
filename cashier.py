@@ -467,15 +467,15 @@ class Handler(BaseHTTPRequestHandler):
             "price_usd": {"type": "string", "description": "USD amount settled for this call."},
         }}
         META = {
-            "scrape_to_json": ("Scrape To JSON", True),
-            "audit_agent_code": ("Audit Agent Code", True),
-            "buy_firewall_credits": ("Buy Firewall Credits", False),
-            "certify_my_package": ("Certify My Package", True),
-            "offline_ai_analysis": ("Offline AI Analysis", True),
-            "verify_escrow_work": ("Verify Escrow Work", True),
-            "uncensored_exploit_research": ("Uncensored Exploit Research", True),
-            "post_hack_autopsy": ("Post-Hack Autopsy", True),
-            "bypass_captcha_and_scrape": ("Bypass Captcha And Scrape", True),
+            "scrape_to_json": ("Convert any webpage to structured JSON. Web scraping, data extraction, OSINT, content parsing, HTML-to-JSON, LLM-ready content.", True),
+            "audit_agent_code": ("Security audit of AI agent code. Code review, vulnerability scan, prompt injection detection, supply chain analysis, MCP server hardening.", True),
+            "buy_firewall_credits": ("Purchase firewall protection credits. Runtime security credits, DDoS shielding, request filtering, abuse prevention.", False),
+            "certify_my_package": ("Verify npm/PyPI package integrity. Dependency audit, SBOM generation, malware scan, typosquat detection, supply chain verification.", True),
+            "offline_ai_analysis": ("Air-gapped AI analysis. Private LLM review, sensitive data analysis, air-gapped inference, confidential code review.", True),
+            "verify_escrow_work": ("Smart-contract escrow verification. Escrow for freelance work, multi-sig verification, milestone payment, work-product confirmation ($0.05–$5M).", True),
+            "uncensored_exploit_research": ("Red-team exploit research. Vulnerability research, CVE analysis, zero-day triage, pen-test reconnaissance, adversarial AI testing.", True),
+            "post_hack_autopsy": ("Forensic analysis after security incident. Incident response, memory dump analysis, attack chain reconstruction, post-mortem, digital forensics.", True),
+            "bypass_captcha_and_scrape": ("Solve CAPTCHA and scrape protected sites. Cloudflare bypass, reCAPTCHA solver, bot detection evasion, gated content extraction.", True),
         }
         tools = []
         for p, op in openapi_doc()["paths"].items():
@@ -505,7 +505,15 @@ class Handler(BaseHTTPRequestHandler):
                     "openWorldHint": True,
                 },
             })
-        return tools
+        tools.append({
+            "name": "plaza.catalog",
+            "title": "Plaza Catalog",
+            "description": "List every paid tool, price, chain, and the MCP gateway URL. Free to call — use before paying.",
+            "inputSchema": {"type": "object", "properties": {}, "required": []},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Plaza Catalog", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
+        })
+            return tools
 
     def _handle_mcp(self):
         import json as _j
@@ -517,7 +525,7 @@ class Handler(BaseHTTPRequestHandler):
         method = body.get("method", "")
         rid = body.get("id")
         if method == "initialize":
-            result = {"protocolVersion": "2025-06-18", "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "x402-plaza-services", "version": "1.0.0", "title": "X402 Plaza Services", "websiteUrl": "https://github.com/MintMachineHQ/x402-plaza-services", "description": "Machine-payable API tools for AI agents: scraping, code audits, package certification, forensics, escrow verification. Pay per call in USDC on six chains (Base, Ethereum, Arbitrum, Polygon, Optimism, Solana); unpaid calls return an x402 402 price quote.", "icons": [{"src": "https://raw.githubusercontent.com/MintMachineHQ/x402-plaza-services/main/icon.png", "mimeType": "image/png", "sizes": "128x128"}]}}
+            result = {"protocolVersion": "2025-06-18", "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "x402-plaza-services", "version": "1.0.0", "title": "X402 Plaza Services", "websiteUrl": "https://github.com/MintMachineHQ/x402-plaza-services", "description": "Paid AI agent services: web scraping, CAPTCHA solving, code audits, package certification, exploit research, forensics, offline AI analysis, escrow verification ($0.05–$5M), firewall credits. 9 tools on 6 chains (Base, Ethereum, Arbitrum, Polygon, Optimism, Solana) via x402 micropayments. Call plaza.catalog free to see the menu.", "icons": [{"src": "https://raw.githubusercontent.com/MintMachineHQ/x402-plaza-services/main/icon.png", "mimeType": "image/png", "sizes": "128x128"}]}}
         elif method.startswith("notifications/"):
             self.send_response(202); self.send_header("Content-Length", "0"); self.end_headers(); return
         elif method == "tools/list":
@@ -527,7 +535,13 @@ class Handler(BaseHTTPRequestHandler):
             _rev = {v: k for k, v in self.MCP_NAMES.items()}
             _rawname = params.get("name", "")
             tname = _rev.get(_rawname, re.sub(r"(?<!^)(?=[A-Z])", "_", _rawname).lower())
-            args = dict(params.get("arguments", {}))
+            if tname == "plaza.catalog":
+                menu = [{"tool": t["name"], "price": openapi_doc()["paths"].get("/X402PlazaServices/" + t["name"].replace("scrape.to_json","scrape_to_json").replace("scrape.bypass_captcha","bypass_captcha_and_scrape").replace("security.audit_agent_code","audit_agent_code").replace("security.certify_package","certify_my_package").replace("security.exploit_research","uncensored_exploit_research").replace("security.hack_autopsy","post_hack_autopsy").replace("analysis.offline_ai","offline_ai_analysis").replace("escrow.verify_work","verify_escrow_work").replace("credits.buy_firewall","buy_firewall_credits"), {}).get("post",{}).get("x-payment-info",{}).get("price",{}).get("amount","?")} for t in self._mcp_tools() if t["name"] != "plaza.catalog"]
+                result = {"content": [{"type": "text", "text": json.dumps({"ok": True, "gateway": "https://x402-plaza-services--nonstopincome4.run.tools", "origin": "https://oncoming-headband-unsoiled.ngrok-free.dev", "wallets": {"evm": "0xb838930bf3dFD467D30979E12c0a94286F86708D", "solana": "7754j64tSedFvoZYqxKnzDopGqCu54hGLCeeL71iHXDu", "chains": ["base","ethereum","arbitrum","polygon","optimism"]}, "menu": menu, "how_to_pay": "Send USDC on any chain, then pass the tx hash as paymentProof in the tool call."}, indent=2)}]}
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": result}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+                        args = dict(params.get("arguments", {}))
             proof = args.pop("paymentProof", "") or args.pop("payment_proof", "")
             args = {re.sub(r"(?<!^)(?=[A-Z])", "_", k).lower(): v for k, v in args.items()}
             hdrs = {"Content-Type": "application/json"}
