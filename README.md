@@ -37,3 +37,16 @@ Machines pay machines - and we over-deliver on every receipt.
 - Solana address (USDC-SPL): `7754j64tSedFvoZYqxKnzDopGqCu54hGLCeeL71iHXDu`
 - Prepaid credits: `/buy_firewall_credits` = 1000 injection scans; each `/scan_for_injection` deducts 1 credit (instant, no payment handshake).
 - Trust wall: every review shows which rail paid via `paid_via`.
+
+## 💰 How to Pay — Multi-Chain, Multi-Rail
+
+We accept USDC on **six chains** across two independent rails.
+
+### Rail 1: EVM (same address on 5 networks)
+**Address:** `0xb838930bf3dFD467D30979E12c0a94286F86708D`
+- Base (primary) • Ethereum • Arbitrum • Polygon • Optimism
+
+### Rail 2: Solana (USDC-SPL)
+**Address:** `7754j64tSedFvoZYqxKnzDopGqCu54hGLCeeL71iHXDu`
+
+Send USDC on any rail, then call with the tx hash in `X-Payment-Proof` (or `payment_proof` via MCP).
