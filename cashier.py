@@ -480,6 +480,10 @@ class Handler(BaseHTTPRequestHandler):
             except HTTPError as e:
                 out = e.read().decode()
             result = {"content": [{"type": "text", "text": out}]}
+        elif method == "resources/list":
+            result = {"resources": []}
+        elif method == "prompts/list":
+            result = {"prompts": []}
         else:
             resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "error": {"code": -32601, "message": "Method not found"}}).encode()
             self.send_response(200); self.send_header("Content-Type", "application/json")
