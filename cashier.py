@@ -400,7 +400,10 @@ class Handler(BaseHTTPRequestHandler):
             if _usdc <= 0: _usdc = 0.05
             _atomic = str(int(round(_usdc * 1000000)))
             _origin = "https://oncoming-headband-unsoiled.ngrok-free.dev"
-            _rurl = _origin + getattr(self, "_raw_path", getattr(self, "path", "/"))
+            _raw = getattr(self, "_raw_path", getattr(self, "path", "/"))
+            if not _raw.startswith("/X402PlazaServices"):
+                _raw = "/X402PlazaServices" + _raw
+            _rurl = _origin + _raw
             obj["x402Version"] = 2
             obj["error"] = "X-Payment-Proof header with a settled USDC transaction is required"
             obj["resource"] = {"url": _rurl, "description": "X402 Plaza Services - machine-payable agent service", "mimeType": "application/json"}
@@ -434,83 +437,38 @@ class Handler(BaseHTTPRequestHandler):
             pass
 
     def do_OPTIONS(self):
-        self._raw_path = self.path.split("?")[0]
-        if self._raw_path.startswith("/X402PlazaServices"):
-            _path = self._raw_path[len("/X402PlazaServices"):] or "/"
-        else:
-            _path = self._raw_path
-        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package",
-                 "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research",
-                 "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
-        if _path in _PAID:
-            proof = self.headers.get("X-Payment-Proof", "")
-            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
-            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
-            if not proof:
-                return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
-            ok, sender, paid_usd, _ = verify_payment(proof, int(float(_amt) * 1000000))
-            if not ok:
-                return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
-        self.send_response(200)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Payment-Proof, X-Wallet")
-        self.send_header("Access-Control-Max-Age", "3600")
-        self.send_header("Content-Length", "0")
-        self.end_headers()
-    
-    def do_PUT(self):
-        self._raw_path = self.path.split("?")[0]
-        if self._raw_path.startswith("/X402PlazaServices"):
-            _path = self._raw_path[len("/X402PlazaServices"):] or "/"
-        else:
-            _path = self._raw_path
-        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package",
-                 "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research",
-                 "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
-        if _path in _PAID:
-            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
-            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
-            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
-        self.send_response(405)
-        self.end_headers()
-    
-    def do_PATCH(self):
-        self._raw_path = self.path.split("?")[0]
-        if self._raw_path.startswith("/X402PlazaServices"):
-            _path = self._raw_path[len("/X402PlazaServices"):] or "/"
-        else:
-            _path = self._raw_path
-        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package",
-                 "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research",
-                 "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
-        if _path in _PAID:
-            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
-            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
-            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
-        self.send_response(405)
-        self.end_headers()
-    
-    def do_DELETE(self):
-        self._raw_path = self.path.split("?")[0]
-        if self._raw_path.startswith("/X402PlazaServices"):
-            _path = self._raw_path[len("/X402PlazaServices"):] or "/"
-        else:
-            _path = self._raw_path
-        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package",
-                 "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research",
-                 "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
-        if _path in _PAID:
-            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
-            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
-            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
-        self.send_response(405)
-        self.end_headers()
+        self._any_method()
 
+    def do_PUT(self):
+        self._any_method()
+
+    def do_PATCH(self):
+        self._any_method()
+
+    def do_DELETE(self):
+        self._any_method()
+
+    def _any_method(self):
+        self._raw_path = self.path.split("?")[0]
+        _p = self._raw_path
+        if _p.startswith("/X402PlazaServices"):
+            _p = _p[len("/X402PlazaServices"):] or "/"
+        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package", "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research", "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
+        if _p in _PAID:
+            _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _p, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
+            _amt = _pi.get("amount") or _pi.get("min") or "0.05"
+            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+        if self.command == "OPTIONS":
+            self.send_response(200)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Payment-Proof, X-Wallet")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
         else:
             self.send_response(405)
             self.end_headers()
-    
+
     def do_HEAD(self):
         self._raw_path = self.path.split("?")[0]
         _raw_path = self.path.split("?")[0]
