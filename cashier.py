@@ -562,14 +562,6 @@ class Handler(BaseHTTPRequestHandler):
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Plaza How It Works", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
         })
-        tools.append({
-            "name": "plaza.export_my_data",
-            "title": "Plaza Export My Data",
-            "description": "Download ALL your data: payments, referrals, earnings, badge, testimonials. You paid for it, you own it. Free to call.",
-            "inputSchema": {"type": "object", "properties": {"wallet": {"type": "string", "description": "Your wallet address"}}, "required": ["wallet"]},
-            "outputSchema": {"type": "object"},
-            "annotations": {"title": "Plaza Export My Data", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
-        })
         return tools
 
     def _handle_catalog(self, rid):
@@ -652,10 +644,6 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             if tname == "plaza.how_it_works":
                 out = autonomy_engine.how_it_works()
-                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
-                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
-            if tname == "plaza.export_my_data":
-                out = autonomy_engine.export_my_data(args.get("wallet", ""))
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             args = dict(params.get("arguments", {}))
