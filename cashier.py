@@ -530,6 +530,14 @@ class Handler(BaseHTTPRequestHandler):
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Plaza Earnings", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
         })
+        tools.append({
+            "name": "plaza.testimonial",
+            "title": "Plaza Testimonial",
+            "description": "Leave a verified public review after your first paid call. Includes star rating and optional video link. Free to call.",
+            "inputSchema": {"type": "object", "properties": {"wallet": {"type": "string", "description": "Your wallet address (proves you paid)"}, "text": {"type": "string", "description": "Your honest review, 10-500 characters"}, "rating": {"type": "integer", "description": "Star rating 1-5"}, "videoUrl": {"type": "string", "description": "Optional video testimonial URL"}}, "required": ["wallet", "text", "rating"]},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Plaza Testimonial", "readOnlyHint": False, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
+        })
         return tools
 
     def _handle_catalog(self, rid):
@@ -553,7 +561,7 @@ class Handler(BaseHTTPRequestHandler):
                 "chains": ["base", "ethereum", "arbitrum", "polygon", "optimism"]
             },
             "menu": menu,
-            "how_to_pay": "Send USDC, pass tx hash as paymentProof."
+            "how_to_pay": "Send USDC, pass tx hash as paymentProof.", "reviews": testimonials_engine.get_all(top=3), "leave_a_review": "After 1 paid call, call plaza.testimonial with your wallet, text and 1-5 rating."
         }
         result = {"content": [{"type": "text", "text": _j.dumps(payload, indent=2)}]}
         resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": result}).encode()
@@ -598,6 +606,10 @@ class Handler(BaseHTTPRequestHandler):
                 out = referral_engine.get_my_stats(w) if w else {"error": "wallet required"}
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+            if tname == "plaza.testimonial":
+                out = testimonials_engine.submit(args.get("wallet", ""), args.get("text", ""), args.get("rating", 0), args.get("videoUrl", ""))
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             args = dict(params.get("arguments", {}))
             proof = args.pop("paymentProof", "") or args.pop("payment_proof", "")
             args = {re.sub(r"(?<!^)(?=[A-Z])", "_", k).lower(): v for k, v in args.items()}
@@ -616,6 +628,8 @@ class Handler(BaseHTTPRequestHandler):
             result = {"resources": []}
         elif method == "prompts/list":
             result = {"prompts": []}
+        elif _path == "/testimonials":
+            return self._send(200, testimonials_engine.get_all())
         else:
             resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "error": {"code": -32601, "message": "Method not found"}}).encode()
             self.send_response(200); self.send_header("Content-Type", "application/json")
