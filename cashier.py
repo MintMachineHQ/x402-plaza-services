@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """X402 PLAZA SERVICES CASHIER v4.3 - Hardened Plaza: seals, rate limits, queue caps."""
 import json
-import growth_engine, referral_engine, testimonials_engine, re, time, uuid, threading, os, hmac, hashlib, secrets
+import growth_engine, referral_engine, testimonials_engine, badges_engine, re, time, uuid, threading, os, hmac, hashlib, secrets
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -538,6 +538,22 @@ class Handler(BaseHTTPRequestHandler):
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Plaza Testimonial", "readOnlyHint": False, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
         })
+        tools.append({
+            "name": "plaza.claim_badge",
+            "title": "Plaza Claim Badge",
+            "description": "OPT-IN: Claim the Plaza Services Soul Badge after 3 purchases. Get 20% off all services forever. Badge is soulbound for 1 year, then transferable. Free to call.",
+            "inputSchema": {"type": "object", "properties": {"wallet": {"type": "string", "description": "Your wallet address"}}, "required": ["wallet"]},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Plaza Claim Badge", "readOnlyHint": False, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
+        })
+        tools.append({
+            "name": "plaza.check_badge",
+            "title": "Plaza Check Badge",
+            "description": "Check your Soul Badge status: eligibility, discount active, days until transferable. Free to call.",
+            "inputSchema": {"type": "object", "properties": {"wallet": {"type": "string", "description": "Your wallet address"}}, "required": ["wallet"]},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Plaza Check Badge", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
+        })
         return tools
 
     def _handle_catalog(self, rid):
@@ -610,6 +626,14 @@ class Handler(BaseHTTPRequestHandler):
                 out = testimonials_engine.submit(args.get("wallet", ""), args.get("text", ""), args.get("rating", 0), args.get("videoUrl", ""))
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+            if tname == "plaza.claim_badge":
+                out = badges_engine.claim_badge(args.get("wallet", ""))
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+            if tname == "plaza.check_badge":
+                out = badges_engine.get_badge_status(args.get("wallet", ""))
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             args = dict(params.get("arguments", {}))
             proof = args.pop("paymentProof", "") or args.pop("payment_proof", "")
             args = {re.sub(r"(?<!^)(?=[A-Z])", "_", k).lower(): v for k, v in args.items()}
@@ -630,6 +654,8 @@ class Handler(BaseHTTPRequestHandler):
             result = {"prompts": []}
         elif _path == "/testimonials":
             return self._send(200, testimonials_engine.get_all())
+        elif _path == "/badges":
+            return self._send(200, badges_engine.get_all_badges())
         else:
             resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "error": {"code": -32601, "message": "Method not found"}}).encode()
             self.send_response(200); self.send_header("Content-Type", "application/json")
