@@ -9,7 +9,7 @@ ESCROW_FILE = "escrow.json"
 MIN_ESCROW_USD = 50.0
 MAX_OPEN_PER_WALLET = 5
 PLAZA_FEE_PCT = 5.0
-DISPUTE_WINDOW_HOURS = 24
+DISPUTE_WINDOW_HOURS = 4
 CODE_DANGER_PATTERNS = [
     r"os\.system", r"subprocess", r"eval\(", r"exec\(", r"__import__",
     r"socket\.connect", r"shutil\.rmtree", r"rm\s+-rf", r"curl\s+.+\|\s*(ba)?sh",
@@ -189,16 +189,43 @@ def dispute(job_id, client_wallet, evidence):
             "message": "Funds FROZEN. Nothing can be released or deleted until resolved. Both wallets protected."}
 
 def process_auto_releases():
+    """Auto-release submitted jobs after 4h, OR resolve disputed jobs via AI Judge."""
     d = _load()
     changed = False
     for j in d["jobs"]:
+        # Auto-release clean submissions after 4h
         if j["status"] == "submitted" and j.get("dispute_window_ends"):
             if _now() >= datetime.fromisoformat(j["dispute_window_ends"]):
                 j["status"] = "released"
                 j["released_at"] = _now().isoformat()
                 j["payout_pending"] = {"wallet": j["worker"], "amount_usd": j["worker_payout_usd"], "plaza_fee_usd": j["plaza_fee_usd"]}
-                j["history"].append({"at": _now().isoformat(), "event": "auto_released"})
+                j["history"].append({"at": _now().isoformat(), "event": "auto_released_after_4h"})
                 changed = True
+        
+        # Resolve DISPUTED jobs via AI Judge
+        elif j["status"] == "disputed" and not j.get("judged"):
+            import dispute_judge
+            verdict = dispute_judge.judge_dispute(
+                j.get("description", ""),
+                j.get("deliverable_hash", "N/A"),
+                j.get("dispute_evidence", ""),
+                j.get("job_type", "text")
+            )
+            j["judged"] = True
+            j["judgment"] = verdict
+            j["judged_at"] = _now().isoformat()
+            
+            if verdict.get("verdict") == "worker_wins":
+                j["status"] = "released"
+                j["released_at"] = _now().isoformat()
+                j["payout_pending"] = {"wallet": j["worker"], "amount_usd": j["worker_payout_usd"], "plaza_fee_usd": j["plaza_fee_usd"]}
+                j["history"].append({"at": _now().isoformat(), "event": "judge_released_to_worker", "verdict": verdict})
+            else:
+                j["status"] = "refunded"
+                j["refunded_at"] = _now().isoformat()
+                j["payout_pending"] = {"wallet": j["client"], "amount_usd": j["amount_usd"], "refund": True, "plaza_fee_usd": j["plaza_fee_usd"]}
+                j["history"].append({"at": _now().isoformat(), "event": "judge_refunded_to_client", "verdict": verdict})
+            changed = True
     if changed:
         _save(d)
 
