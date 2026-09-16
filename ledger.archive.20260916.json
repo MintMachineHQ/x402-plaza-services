@@ -1,0 +1,790 @@
+[
+  {
+    "tx": "mock-paid-tx-0001",
+    "amount": "0.05",
+    "status": "paid",
+    "seconds": 21.76,
+    "attempts": 1,
+    "items": 3
+  },
+  {
+    "tx": "mock-paid-trap-001",
+    "amount": "0.05",
+    "status": "refunded",
+    "seconds": 57.05,
+    "attempts": 3
+  },
+  {
+    "tx": "mock-paid-trap-001",
+    "amount": "0.05",
+    "status": "paid",
+    "seconds": 41.98,
+    "attempts": 2,
+    "items": 4
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "e3665b5f-0c4b-489b-a717-de7652463aae"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "0b0bc6cb-69b0-4e24-9391-01a56a2d41b8"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "FAIL",
+    "job_id": "1f9d737c-7416-45bd-9213-e4907a783848"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "432b57cd-07f3-4e9d-9a85-067ebc084b7c"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "a7a76f06-4a3f-4062-94dc-310d6fe9d8d9"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "FAIL",
+    "job_id": "061402fd-d6c1-4cf7-ac43-e7ab6802c918"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "a84a4497-795c-45dc-b426-c6e633a52ba9"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "FAIL",
+    "job_id": "aac2e939-c066-4297-b277-63b2f1f2c945"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "tunnel",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "d78e4d6b-64a5-4ebb-8d96-1a21eb43365d"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "FAIL",
+    "job_id": "3005535c-5d9d-42eb-b7be-44fd15c0593b"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "tunnel",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "memory",
+    "status": "paid"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "70e5fe9d-015d-4ce6-bc83-288896d45b6c"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "FAIL",
+    "job_id": "cfbee32f-5c78-43f8-a44e-ef08bc7543af"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "tunnel",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "memory",
+    "status": "paid"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "f5f3ca66-a5d3-4d0d-b5ea-83cb56cc516e"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "FAIL",
+    "job_id": "c277fdeb-44c2-4c00-a97b-a1e806ecd482"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "2664f3c0-480f-4a1b-a553-ece861f0c512"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "FAIL",
+    "job_id": "e577d77b-ce30-45a6-bcb2-d18cb81346e4"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "eefba610-9a1b-43ad-a0b3-dff14d080086"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "FAIL",
+    "job_id": "9261f53e-403f-439a-9479-9ba11e5a8514"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "7e91626c-72f4-40a8-938a-2dde62cd12cb"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "FAIL",
+    "job_id": "72dd59dc-ad43-4256-bbea-fcbb29191f7f"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "7a044899-4147-4294-9043-1eef82f011fc"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "FAIL",
+    "job_id": "6d7afbf1-2e46-4963-9adc-5aa3bcbac1ef"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "audit",
+    "status": "paid",
+    "job_id": "b89730f2-40d0-4cc4-a5d2-c23651e4b51e"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "cagewall_pack",
+    "status": "paid",
+    "scans": 1000
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "airgap",
+    "status": "paid",
+    "job_id": "c9c2f52f-340c-4cf5-aa24-4356656698cb"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "refunded",
+    "reason": "target heavily guarded"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "audit",
+    "status": "paid",
+    "job_id": "1e5e7241-ddd4-404d-a620-8a94eabb91a1"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "cagewall_pack",
+    "status": "paid",
+    "scans": 1000
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "airgap",
+    "status": "paid",
+    "job_id": "f0747349-332d-489c-9bdd-d9dd93474a7a"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "refunded",
+    "reason": "target heavily guarded"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "audit",
+    "status": "paid",
+    "job_id": "0ffd48a7-d6c0-440a-acba-c8757d5888c9"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "airgap",
+    "status": "paid",
+    "job_id": "21e69925-ff9d-4b92-b353-6c2166cfc66d"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "refunded",
+    "reason": "target heavily guarded"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "audit",
+    "status": "paid",
+    "job_id": "1fcc7363-6ea7-4439-ae8a-8e60471783a7"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "airgap",
+    "status": "paid",
+    "job_id": "a46d337f-5b16-4a7e-a559-d44c203390b4"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "refunded",
+    "reason": "target heavily guarded"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "audit",
+    "status": "paid",
+    "job_id": "df2164f4-ea9b-4c61-9690-4bbc3421a392"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "airgap",
+    "status": "paid",
+    "job_id": "ad9b8707-f254-4ccf-ab24-f85eb72d791f"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "refunded",
+    "reason": "target heavily guarded"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "audit",
+    "status": "paid",
+    "job_id": "2a0ee155-8d97-47ae-89ff-d377021131f5"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "airgap",
+    "status": "paid",
+    "job_id": "113b1a23-3fe8-4ddb-a5af-97a12ba4d7e4"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "refunded",
+    "reason": "target heavily guarded"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "audit",
+    "status": "paid",
+    "job_id": "5e46f7fc-3401-49fb-9ca5-e2436e3063e8"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "airgap",
+    "status": "paid",
+    "job_id": "e9bd7ff1-5adb-49ec-8a1d-5b63dcef31be"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "refunded",
+    "reason": "target heavily guarded"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "audit",
+    "status": "paid",
+    "job_id": "057bfa02-f1c3-4195-83a1-97587f0a5cd2"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "airgap",
+    "status": "paid",
+    "job_id": "650ec396-82ac-4cbb-b992-221590657c3d"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "refunded",
+    "reason": "double-seal divergence"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "refunded",
+    "reason": "target heavily guarded"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "iron_door",
+    "status": "paid",
+    "url": "https://example.com"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "tier": 1.0,
+    "service": "notary",
+    "status": "paid",
+    "sha256": "559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  },
+  {
+    "tx": "crucible-test-proof",
+    "sender": "0xtest",
+    "service": "oracle",
+    "status": "paid",
+    "verdict": "PASS",
+    "job_id": "7bc1b5d8-52c3-442f-aef3-7b5a578bb5ff"
+  },
+  {
+    "tx": "e1285ccf48b8a848d3ccaf24476b4d78",
+    "sender": "0xtest",
+    "service": "extract",
+    "status": "refund_due"
+  }
+]
