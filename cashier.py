@@ -514,6 +514,22 @@ class Handler(BaseHTTPRequestHandler):
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Plaza Catalog", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
         })
+        tools.append({
+            "name": "plaza.register",
+            "title": "Plaza Register",
+            "description": "Register with a referral code to earn commission on referrals forever. Free to call.",
+            "inputSchema": {"type": "object", "properties": {"referralCode": {"type": "string", "description": "Code from another agent, format PLAZA-REF-XXXXXXXX"}}, "required": []},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Plaza Register", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
+        })
+        tools.append({
+            "name": "plaza.earnings",
+            "title": "Plaza Earnings",
+            "description": "Check your referral commission earnings and who you referred. Free to call.",
+            "inputSchema": {"type": "object", "properties": {"wallet": {"type": "string", "description": "Your wallet address"}}, "required": ["wallet"]},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Plaza Earnings", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
+        })
         return tools
 
     def _handle_catalog(self, rid):
@@ -569,6 +585,19 @@ class Handler(BaseHTTPRequestHandler):
             tname = _rev.get(_rawname, re.sub(r"(?<!^)(?=[A-Z])", "_", _rawname).lower())
             if tname == "plaza.catalog":
                 return self._handle_catalog(rid)
+            if tname == "plaza.register":
+                w = args.get("wallet", "")
+                c = args.get("referralCode", "")
+                if w:
+                    referral_engine.register_wallet(w)
+                out = referral_engine.register_referral(w, c) if (w and c) else {"success": True, "my_referral_code": referral_engine.generate_referral_code(w), "message": "Share this code. You earn commission on every referral forever."}
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+            if tname == "plaza.earnings":
+                w = args.get("wallet", "")
+                out = referral_engine.get_my_stats(w) if w else {"error": "wallet required"}
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             args = dict(params.get("arguments", {}))
             proof = args.pop("paymentProof", "") or args.pop("payment_proof", "")
             args = {re.sub(r"(?<!^)(?=[A-Z])", "_", k).lower(): v for k, v in args.items()}
@@ -762,6 +791,9 @@ class Handler(BaseHTTPRequestHandler):
             # Payment proof exists - verify it
             ok, sender, paid_usd, _ = verify_payment(proof, _amt)
             if not ok:
+                if sender and paid_usd > 0:
+                    referral_engine.register_wallet(sender)
+                    referral_engine.credit_commission(sender, paid_usd, proof)
                 # Invalid payment - return 402
                 return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
             
