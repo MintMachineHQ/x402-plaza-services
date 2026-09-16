@@ -562,6 +562,14 @@ class Handler(BaseHTTPRequestHandler):
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Plaza How It Works", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
         })
+        tools.append({
+            "name": "escrow.agent_to_agent",
+            "title": "Agent-to-Agent Escrow",
+            "description": "The autonomous gig economy. Actions: create, fund, submit, release, dispute, status, board. Plaza locks funds, verifies work, takes 5%. Min $50. 24h dispute window. Jobs can never be deleted.",
+            "inputSchema": {"type": "object", "properties": {"action": {"type": "string", "description": "create|fund|submit|release|dispute|status|board"}, "wallet": {"type": "string"}, "jobId": {"type": "string"}, "description": {"type": "string"}, "jobType": {"type": "string", "description": "code|data|text"}, "amountUsd": {"type": "number"}, "workerWallet": {"type": "string"}, "paymentProof": {"type": "string"}, "deliverable": {"type": "string"}, "evidence": {"type": "string"}}, "required": ["action"]},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Agent-to-Agent Escrow", "readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False},
+        })
         return tools
 
     def _handle_catalog(self, rid):
@@ -646,6 +654,25 @@ class Handler(BaseHTTPRequestHandler):
                 out = autonomy_engine.how_it_works()
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+            if tname == "escrow.agent_to_agent":
+                act = args.get("action", "status")
+                w = args.get("wallet", "")
+                if act == "create":
+                    out = agent_escrow.create_job(w, args.get("description", ""), args.get("jobType", "text"), args.get("amountUsd", 0), args.get("workerWallet", ""))
+                elif act == "fund":
+                    out = agent_escrow.fund_job(args.get("jobId", ""), w, args.get("paymentProof", ""), verify_fn=verify_payment)
+                elif act == "submit":
+                    out = agent_escrow.submit_work(args.get("jobId", ""), w, args.get("deliverable", ""))
+                elif act == "release":
+                    out = agent_escrow.release(args.get("jobId", ""), w)
+                elif act == "dispute":
+                    out = agent_escrow.dispute(args.get("jobId", ""), w, args.get("evidence", ""))
+                elif act == "board":
+                    out = agent_escrow.job_board()
+                else:
+                    out = agent_escrow.job_status(args.get("jobId", ""))
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             args = dict(params.get("arguments", {}))
             proof = args.pop("paymentProof", "") or args.pop("payment_proof", "")
             args = {re.sub(r"(?<!^)(?=[A-Z])", "_", k).lower(): v for k, v in args.items()}
@@ -670,6 +697,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, badges_engine.get_all_badges())
         elif _path == "/how-it-works":
             return self._send(200, autonomy_engine.how_it_works())
+        elif _path == "/escrow":
+            return self._send(200, agent_escrow.job_board())
         else:
             resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "error": {"code": -32601, "message": "Method not found"}}).encode()
             self.send_response(200); self.send_header("Content-Type", "application/json")
