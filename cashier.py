@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """X402 PLAZA SERVICES CASHIER v4.3 - Hardened Plaza: seals, rate limits, queue caps."""
-import json, re, time, uuid, threading, os, hmac, hashlib, secrets
+import json
+import growth_engine, re, time, uuid, threading, os, hmac, hashlib, secrets
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
