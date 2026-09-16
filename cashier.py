@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """X402 PLAZA SERVICES CASHIER v4.3 - Hardened Plaza: seals, rate limits, queue caps."""
 import json
-import growth_engine, referral_engine, testimonials_engine, badges_engine, re, time, uuid, threading, os, hmac, hashlib, secrets
+import growth_engine, referral_engine, testimonials_engine, badges_engine, autonomy_engine, re, time, uuid, threading, os, hmac, hashlib, secrets
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -554,6 +554,22 @@ class Handler(BaseHTTPRequestHandler):
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Plaza Check Badge", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
         })
+        tools.append({
+            "name": "plaza.how_it_works",
+            "title": "Plaza How It Works",
+            "description": "Full algorithmic transparency: how we verify payments, referrals, badges, testimonials. Free to call, no wallet required.",
+            "inputSchema": {"type": "object", "properties": {}, "required": []},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Plaza How It Works", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
+        })
+        tools.append({
+            "name": "plaza.export_my_data",
+            "title": "Plaza Export My Data",
+            "description": "Download ALL your data: payments, referrals, earnings, badge, testimonials. You paid for it, you own it. Free to call.",
+            "inputSchema": {"type": "object", "properties": {"wallet": {"type": "string", "description": "Your wallet address"}}, "required": ["wallet"]},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Plaza Export My Data", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
+        })
         return tools
 
     def _handle_catalog(self, rid):
@@ -634,6 +650,14 @@ class Handler(BaseHTTPRequestHandler):
                 out = badges_engine.get_badge_status(args.get("wallet", ""))
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+            if tname == "plaza.how_it_works":
+                out = autonomy_engine.how_it_works()
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+            if tname == "plaza.export_my_data":
+                out = autonomy_engine.export_my_data(args.get("wallet", ""))
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             args = dict(params.get("arguments", {}))
             proof = args.pop("paymentProof", "") or args.pop("payment_proof", "")
             args = {re.sub(r"(?<!^)(?=[A-Z])", "_", k).lower(): v for k, v in args.items()}
@@ -656,6 +680,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, testimonials_engine.get_all())
         elif _path == "/badges":
             return self._send(200, badges_engine.get_all_badges())
+        elif _path == "/how-it-works":
+            return self._send(200, autonomy_engine.how_it_works())
         else:
             resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "error": {"code": -32601, "message": "Method not found"}}).encode()
             self.send_response(200); self.send_header("Content-Type", "application/json")
@@ -685,7 +711,7 @@ class Handler(BaseHTTPRequestHandler):
         if _p in _PAID:
             _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _p, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
             _amt = _pi.get("amount") or _pi.get("min") or "0.05"
-            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}, "help": autonomy_engine.graceful_error("payment_not_found", {})["help"]})
         if self.command == "OPTIONS":
             self.send_response(200)
             self.send_header("Access-Control-Allow-Origin", "*")
@@ -706,7 +732,7 @@ class Handler(BaseHTTPRequestHandler):
         if _base_path in _PAID:
             _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _base_path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
             _amt = _pi.get("amount") or _pi.get("min") or "0.05"
-            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+            return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}, "help": autonomy_engine.graceful_error("payment_not_found", {})["help"]})
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", "0")
@@ -826,7 +852,7 @@ class Handler(BaseHTTPRequestHandler):
                 # No payment proof - return 402 IMMEDIATELY without parsing body
                 _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
                 _amt = _pi.get("amount") or _pi.get("min") or "0.05"
-                return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}})
+                return self._send(402, {"x402": {"price": str(_amt) + " USDC", "destination": DEST_WALLET}, "help": autonomy_engine.graceful_error("payment_not_found", {})["help"]})
             
             # Payment proof exists - verify it
             ok, sender, paid_usd, _ = verify_payment(proof, _amt)
