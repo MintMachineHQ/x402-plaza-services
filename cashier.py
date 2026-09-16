@@ -513,7 +513,7 @@ class Handler(BaseHTTPRequestHandler):
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Plaza Catalog", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": False},
         })
-                return tools
+        return tools
 
     def _handle_catalog(self, rid):
         import json as _j
@@ -566,6 +566,8 @@ class Handler(BaseHTTPRequestHandler):
             _rev = {v: k for k, v in self.MCP_NAMES.items()}
             _rawname = params.get("name", "")
             tname = _rev.get(_rawname, re.sub(r"(?<!^)(?=[A-Z])", "_", _rawname).lower())
+            if tname == "plaza.catalog":
+                return self._handle_catalog(rid)
             args = dict(params.get("arguments", {}))
             proof = args.pop("paymentProof", "") or args.pop("payment_proof", "")
             args = {re.sub(r"(?<!^)(?=[A-Z])", "_", k).lower(): v for k, v in args.items()}
