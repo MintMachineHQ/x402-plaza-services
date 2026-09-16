@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 FIRST_FREE_FILE = "first_free_used.json"
-MAX_FREE_AGENTS = 25
+MAX_FREE_AGENTS = 11
 
 def load_first_free_data():
     if os.path.exists(FIRST_FREE_FILE):
