@@ -106,7 +106,11 @@ def register_wallet(wallet: str):
         save_referrals(data)
 
 def credit_commission(paying_wallet: str, amount_usdc: float, tx_hash: str) -> dict:
-    """Credit 10% commission to the referrer after a payment."""
+    """Credit 10% commission to the referrer after a payment (min $1 spend required)."""
+    # Anti-Sybil: Only pay commission if agent spent >= $1 on this transaction
+    if amount_usdc < 1.0:
+        return {"commission": 0, "reason": "Commission only paid on $1+ transactions (anti-Sybil)"}
+    
     data = load_referrals()
     paying_lower = paying_wallet.lower()
     
