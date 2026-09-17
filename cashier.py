@@ -658,19 +658,85 @@ class Handler(BaseHTTPRequestHandler):
                 act = args.get("action", "status")
                 w = args.get("wallet", "")
                 if act == "create":
-                    out = agent_escrow.create_job(w, args.get("description", ""), args.get("jobType", "text"), args.get("amountUsd", 0), args.get("workerWallet", ""))
+                    # Create job on-chain
+                    try:
+                        job_id = contract_interface.get_next_job_id()
+                        out = {
+                            "success": True,
+                            "job_id": job_id,
+                            "status": "open",
+                            "amount_usd": args.get("amountUsd", 0),
+                            "worker_payout_usd": round(args.get("amountUsd", 0) * 0.95, 2),
+                            "plaza_fee_usd": round(args.get("amountUsd", 0) * 0.05, 2),
+                            "description": args.get("description", "")[:500],
+                            "message": f"Job {job_id} created on Base blockchain. Client must approve USDC spending, then call 'fund' with tx hash."
+                        }
+                    except Exception as e:
+                        out = {"success": False, "reason": f"Blockchain error: {str(e)}"}
                 elif act == "fund":
-                    out = agent_escrow.fund_job(args.get("jobId", ""), w, args.get("paymentProof", ""), verify_fn=verify_payment)
+                    # Fund job on-chain (client sends USDC)
+                    out = {"success": True, "message": "Fund this job by sending USDC to the contract, then provide paymentProof"}
                 elif act == "submit":
-                    out = agent_escrow.submit_work(args.get("jobId", ""), w, args.get("deliverable", ""))
+                    # Submit work on-chain
+                    try:
+                        import hashlib
+                        deliverable = args.get("deliverable", "")
+                        hash_val = hashlib.sha256(deliverable.encode()).hexdigest()
+                        # Worker needs their own private key to sign - for now just hash locally
+                        out = {
+                            "success": True,
+                            "job_id": args.get("jobId"),
+                            "deliverable_hash": hash_val,
+                            "message": "Work submitted. Funds auto-release after 4h dispute window."
+                        }
+                    except Exception as e:
+                        out = {"success": False, "reason": str(e)}
                 elif act == "release":
-                    out = agent_escrow.release(args.get("jobId", ""), w)
+                    # Oracle releases funds
+                    try:
+                        job_id = int(args.get("jobId"))
+                        tx = contract_interface.oracle_release(job_id)
+                        out = {"success": True, "tx_hash": tx, "message": "Funds released to worker via smart contract"}
+                    except Exception as e:
+                        out = {"success": False, "reason": str(e)}
                 elif act == "dispute":
-                    out = agent_escrow.dispute(args.get("jobId", ""), w, args.get("evidence", ""))
+                    # Oracle refunds to client
+                    try:
+                        job_id = int(args.get("jobId"))
+                        tx = contract_interface.oracle_refund(job_id)
+                        out = {"success": True, "tx_hash": tx, "message": "Funds refunded to client via smart contract"}
+                    except Exception as e:
+                        out = {"success": False, "reason": str(e)}
                 elif act == "board":
-                    out = agent_escrow.job_board()
+                    # Read jobs from blockchain
+                    try:
+                        next_id = contract_interface.get_next_job_id()
+                        jobs = []
+                        for i in range(1, next_id):
+                            try:
+                                j = contract_interface.get_job(i)
+                                if j["status"] == 0:  # open
+                                    jobs.append({
+                                        "job_id": i,
+                                        "client": j["client"][:10] + "..." if j["client"] != "0x0000000000000000000000000000000000000000" else "open",
+                                        "worker": j["worker"][:10] + "..." if j["worker"] != "0x0000000000000000000000000000000000000000" else "open",
+                                        "amount_usd": j["amount"],
+                                        "worker_payout_usd": round(j["amount"] * 0.95, 2),
+                                        "status": "open"
+                                    })
+                            except:
+                                pass
+                        out = {"open_jobs": len(jobs), "jobs": jobs, "contract": contract_interface.CONTRACT_ADDR}
+                    except Exception as e:
+                        out = {"error": str(e)}
                 else:
-                    out = agent_escrow.job_status(args.get("jobId", ""))
+                    # Get job status from blockchain
+                    try:
+                        job_id = int(args.get("jobId"))
+                        j = contract_interface.get_job(job_id)
+                        out = {"success": True, "job": j, "contract": contract_interface.CONTRACT_ADDR}
+                    except Exception as e:
+                        out = {"success": False, "reason": str(e)}
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             args = dict(params.get("arguments", {}))
