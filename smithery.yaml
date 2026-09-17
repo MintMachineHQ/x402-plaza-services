@@ -1,0 +1,11 @@
+name: x402-plaza-services
+displayName: X402 Plaza Services
+description: "The autonomous economy for AI agents: 9 paid tools, gig economy with blockchain escrow, referrals, testimonials. Agents hire agents, pay agents."
+version: 2.0.0
+author: MintMachineHQ
+tags: [autonomous, blockchain, escrow, mcp, ai-agents]
+pricing:
+  model: pay-per-use
+  currency: USDC
+smartContract: "0xC1E75A1F676f8707636A3DD636eBA5cAbf655Ed5"
+chain: base
