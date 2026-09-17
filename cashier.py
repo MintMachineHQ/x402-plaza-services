@@ -647,6 +647,14 @@ class Handler(BaseHTTPRequestHandler):
             _rawname = params.get("name", "")
             tname = _rev.get(_rawname, re.sub(r"(?<!^)(?=[A-Z])", "_", _rawname).lower())
             args = dict(params.get("arguments", {}))
+
+            if tname == "analysis.summarize_clean":
+                text = args.get("text", "")
+                instructions = args.get("instructions", "Summarize the main points")
+                wallet = args.get("wallet", "")
+                out = summarize_engine.summarize(text, instructions, wallet)
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             if tname == "plaza.catalog":
                 return self._handle_catalog(rid)
             if tname == "plaza.register":
@@ -674,15 +682,6 @@ class Handler(BaseHTTPRequestHandler):
                 out = badges_engine.get_badge_status(args.get("wallet", ""))
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
-            if tname == "analysis.summarize_clean":
-                import summarize_engine
-                text = args.get("text", "")
-                instructions = args.get("instructions", "Summarize the main points")
-                wallet = args.get("wallet", "")
-                out = summarize_engine.summarize(text, instructions, wallet)
-                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
-                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
-
             if tname == "scrape.stealth_residential":
                 import stealth_engine
                 urls = args.get("urls")
