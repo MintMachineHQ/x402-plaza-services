@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """X402 PLAZA SERVICES CASHIER v4.3 - Hardened Plaza: seals, rate limits, queue caps."""
 import json
-import growth_engine, referral_engine, testimonials_engine, badges_engine, autonomy_engine, agent_escrow, dispute_judge, auto_payouts, contract_interface, stealth_engine, re, time, uuid, threading, os, hmac, hashlib, secrets
+import growth_engine, referral_engine, testimonials_engine, badges_engine, autonomy_engine, agent_escrow, dispute_judge, auto_payouts, contract_interface, stealth_engine, summarize_engine, re, time, uuid, threading, os, hmac, hashlib, secrets
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -585,6 +585,14 @@ class Handler(BaseHTTPRequestHandler):
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Stealth Residential Scrape v6", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": False, "openWorldHint": True},
         })
+        tools.append({
+            "name": "analysis.summarize_clean",
+            "title": "Summarize and Clean",
+            "description": "Save 90% on your own API tokens. Pass massive HTML/PDF dumps (up to 40k tokens). Our air-gapped LLM strips noise and returns clean JSON. $0.10 per 10k tokens.",
+            "inputSchema": {"type": "object", "properties": {"text": {"type": "string"}, "instructions": {"type": "string", "description": "What to extract or summarize"}, "wallet": {"type": "string"}}, "required": ["text"]},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Summarize and Clean", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False},
+        })
         return tools
 
     def _handle_catalog(self, rid):
@@ -666,6 +674,15 @@ class Handler(BaseHTTPRequestHandler):
                 out = badges_engine.get_badge_status(args.get("wallet", ""))
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+            if tname == "analysis.summarize_clean":
+                import summarize_engine
+                text = args.get("text", "")
+                instructions = args.get("instructions", "Summarize the main points")
+                wallet = args.get("wallet", "")
+                out = summarize_engine.summarize(text, instructions, wallet)
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+
             if tname == "scrape.stealth_residential":
                 import stealth_engine
                 urls = args.get("urls")
