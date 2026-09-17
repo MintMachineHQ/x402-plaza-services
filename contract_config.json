@@ -1,11 +1,7 @@
 {
-  "base": {
-    "rpc": "https://mainnet.base.org",
-    "contract": "0xC1E75A1F676f8707636A3DD636eBA5cAbf655Ed5",
-    "chain_id": 8453,
-    "fee_recipient": "0xb838930bf3dFD467D30979E12c0a94286F86708D"
-  },
-  "oracle": {
-    "address": "0x456Ef3C809bF1016A2a2A67946a4C6B13198755c"
-  }
+  "escrow_contract": "0xC1E75A1F676f8707636A3DD636eBA5cAbf655Ed5",
+  "oracle_address": "0x456Ef3C809bF1016A2a2A67946a4C6B13198755c",
+  "fee_recipient": "0xb838930bf3dFD467D30979E12c0a94286F86708D",
+  "rpc_url": "https://mainnet.base.org",
+  "chain_id": 8453
 }
