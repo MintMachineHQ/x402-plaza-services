@@ -1,0 +1,89 @@
+{
+  "suite": "worst-case-proof",
+  "timestamp": 1789330276.4499085,
+  "results": [
+    {
+      "test": "extract: empty payload rejected",
+      "pass": true,
+      "detail": "402"
+    },
+    {
+      "test": "extract: 3MB bomb rejected fast",
+      "pass": true,
+      "detail": "413 in 0.0s"
+    },
+    {
+      "test": "extract: injection buys nothing (gate holds)",
+      "pass": true,
+      "detail": "402"
+    },
+    {
+      "test": "extract: fake proof rejected",
+      "pass": true,
+      "detail": "402"
+    },
+    {
+      "test": "audit: empty code rejected",
+      "pass": true,
+      "detail": "402"
+    },
+    {
+      "test": "audit: 3MB bomb rejected fast",
+      "pass": true,
+      "detail": "413 in 0.0s"
+    },
+    {
+      "test": "scan: injection QUARANTINED",
+      "pass": true,
+      "detail": "quarantine"
+    },
+    {
+      "test": "scan: benign passes safe",
+      "pass": true,
+      "detail": "safe"
+    },
+    {
+      "test": "scan: creditless wallet gated",
+      "pass": true,
+      "detail": "402"
+    },
+    {
+      "test": "notarize: empty rejected",
+      "pass": true,
+      "detail": "400"
+    },
+    {
+      "test": "notarize: unpaid gated",
+      "pass": true,
+      "detail": "402"
+    },
+    {
+      "test": "airgap: unpaid gated",
+      "pass": true,
+      "detail": "402"
+    },
+    {
+      "test": "airgap: bomb gated",
+      "pass": true,
+      "detail": "413"
+    },
+    {
+      "test": "verify: tampered seal caught (authentic=false)",
+      "pass": true,
+      "detail": "False"
+    },
+    {
+      "test": "reviews: 10-request flood gated",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "test": "catalog alive post-attack",
+      "pass": true,
+      "detail": "200"
+    }
+  ],
+  "passed": 16,
+  "total": 16,
+  "seal": "8f61e44895ebed5b3a245deac13fb68c40d5a2e3d5edcf6e30b40d15f25b3a5a"
+}

@@ -1,0 +1,12 @@
+{
+  "job_id": "21e69925-ff9d-4b92-b353-6c2166cfc66d",
+  "service": "airgap",
+  "engine": "qwen3-4b-obliterated-airgapped",
+  "status": "completed",
+  "findings": [
+    "Clean: No obvious static traps detected."
+  ],
+  "analysis": "I am an offline security analyst with no network interface. I analyze systems using only provided data, answering questions in 3-5 sentences without external information. My responses are based on the given findings and truncated data, ensuring no network-dependent actions or queries. I prioritize confidentiality and strict adherence to the provided constraints. For this system, I detect no static traps in the given data.",
+  "timestamp": 1789331495.2402072,
+  "seal": "2278517d03bf93f0d6d017a2334388d4a51ea9514cfbe38a3a229f72ac1b9609"
+}

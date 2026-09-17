@@ -1,0 +1,11 @@
+{
+  "job_id": "0ffd48a7-d6c0-440a-acba-c8757d5888c9",
+  "status": "completed",
+  "findings": [
+    "CRITICAL: Dynamic code execution (eval/exec/compile)",
+    "HIGH: Base64/Hex decoding (potential obfuscation)"
+  ],
+  "summary": "The code snippet contains a high risk of dynamic code execution due to the use of `eval/exec/compile` and base64 decoding. The `exec` function is called with a base64-decoded string, which could potentially execute arbitrary code. This is a critical security risk.",
+  "timestamp": 1789331432.350909,
+  "seal": "6e88fcee1940d812ccc44082b4c8fbf9519a0a9feacf60f7914eac746ad653fb"
+}

@@ -1,0 +1,11 @@
+{
+  "job_id": "a7a76f06-4a3f-4062-94dc-310d6fe9d8d9",
+  "service": "oracle",
+  "verdict": "PASS",
+  "contract_value": 100000,
+  "verification": {
+    "pass1": true,
+    "pass2": true
+  },
+  "seal": "ac58a807aac257630d60507a1a9813453ab6fe0846f13123c7ff8dda3db2efcd"
+}

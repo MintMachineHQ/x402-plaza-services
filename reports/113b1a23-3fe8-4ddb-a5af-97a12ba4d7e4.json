@@ -1,0 +1,12 @@
+{
+  "job_id": "113b1a23-3fe8-4ddb-a5af-97a12ba4d7e4",
+  "service": "airgap",
+  "engine": "qwen3-4b-obliterated-airgapped",
+  "status": "completed",
+  "findings": [
+    "Clean: No obvious static traps detected."
+  ],
+  "analysis": "I am an offline security analyst with no network interface. I analyze systems using only provided data, answering questions in 3-5 sentences without external information. My role is to assess security findings from truncated data, focusing on static traps and system integrity. I operate independently, relying solely on the input given. I ensure responses are accurate and compliant with the provided constraints.",
+  "timestamp": 1789333122.2743123,
+  "seal": "3ad8baf157d8664630d298d6effbaf8723e40ef10a5213268a10c7fb320c4f45"
+}

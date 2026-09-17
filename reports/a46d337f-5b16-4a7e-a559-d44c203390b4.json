@@ -1,0 +1,12 @@
+{
+  "job_id": "a46d337f-5b16-4a7e-a559-d44c203390b4",
+  "service": "airgap",
+  "engine": "qwen3-4b-obliterated-airgapped",
+  "status": "completed",
+  "findings": [
+    "Clean: No obvious static traps detected."
+  ],
+  "analysis": "You are an offline security analyst. The engine running you has no network interface. Answer the question in 3-5 sentences using only the provided data. Never request external information.",
+  "timestamp": 1789331824.8464324,
+  "seal": "494c59c89505b0743cd820c441a1d9cce681fe555bd4caf0127a5a1ece1a56df"
+}
