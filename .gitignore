@@ -35,3 +35,17 @@ production_polish.py
 strip_low_ticket.py
 test_proof.key
 reviews.json
+contracts/broadcast/
+contracts/cache/
+contracts/out/
+*.key
+oracle.key
+payout_wallet.key
+contracts/broadcast/
+contracts/cache/
+contracts/out/
+contracts/lib/
+*.key
+oracle.key
+payout_wallet.key
+contract_config.json
