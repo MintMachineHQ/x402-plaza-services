@@ -1,1 +1,0 @@
-{"version":1,"failures":[{"contract":"test/TestLife.t.sol:TestLife","test":"testFullAutonomousLifecycle"}]}

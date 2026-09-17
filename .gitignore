@@ -1,12 +1,69 @@
-# SECRETS (Never push private keys)
-*.key
-plaza_secret.key
-burner_secret.key
+# === PYTHON ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
 
-# STATE DATABASES (Contains private keys or IP logs)
+# === FOUNDRY BUILD ARTIFACTS (never commit) ===
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+contracts/cache/solidity-files-cache.json
+contracts/cache/test-failures
+
+# === LOCAL STATE DATABASES ===
+ledger.json
+reviews.json
+notary.json
+credits.json
+spent_txs.json
+wallet_rate.json
 burner_wallets.json
 shield_state.json
 stealth_state.json
 stealth_rate.json
 audit_log.json
+marketing_analytics.json
+ab_tests.json
+referrals.json
+
+# === BACKUP FILES (never commit old versions) ===
+cashier_v*.py
+*_backup.py
+*_backup_*.py
+mcp_server_v*_backup.py
+
+# === ONE-OFF SCRIPTS (never commit temp patches) ===
+patch_*.py
+diagnose_*.py
+fix_*.py
+level*_crucible*.py
+security_crucible*.py
+production_polish.py
+proof_*.py
+update_tests.py
+strip_low_ticket.py
+auto_submit_directories*.py
+
+# === LOGS & REPORTS ===
+shop.log
+reports/
+memories/
+
+# === SECRETS ===
+*.key
+.env
+.env.*
 oracle.key
+burner_secret.key
+plaza_secret.key
+
+# === IDE / EDITOR ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
