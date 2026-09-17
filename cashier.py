@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 #!/usr/bin/env python3
 """X402 PLAZA SERVICES CASHIER v4.3 - Hardened Plaza: seals, rate limits, queue caps."""
 import json
@@ -868,6 +869,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        _path = urlparse(self.path).path or "/"
         if self.path.split("?")[0] == "/mcp":
             return self._handle_mcp()
         # DEBUG LOGGING - capture every request for x402scan diagnosis
