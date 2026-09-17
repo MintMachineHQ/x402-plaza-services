@@ -1,51 +1,11 @@
-# Secrets - NEVER COMMIT
-signing.key
+# SECRETS (Never push private keys)
 *.key
+plaza_secret.key
+burner_secret.key
 
-# Runtime data
-spent_txs.json
-wallet_rate.json
-credits.json
-notary.json
-ledger.json
-
-# Generated files
-reports/
-memories/
-*.log
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-
-# Backup files
-*_backup.py
-*_v[0-9]*.py
-
-# Test scripts
-proof_*.py
-security_crucible*.py
-level3_crucible*.py
-diagnose_*.py
-fix_*.py
-patch_*.py
-update_tests.py
-production_polish.py
-strip_low_ticket.py
-test_proof.key
-reviews.json
-contracts/broadcast/
-contracts/cache/
-contracts/out/
-*.key
-oracle.key
-payout_wallet.key
-contracts/broadcast/
-contracts/cache/
-contracts/out/
-contracts/lib/
-*.key
-oracle.key
-payout_wallet.key
-contract_config.json
+# STATE DATABASES (Contains private keys or IP logs)
+burner_wallets.json
+shield_state.json
+stealth_state.json
+stealth_rate.json
+audit_log.json
