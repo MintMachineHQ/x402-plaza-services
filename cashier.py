@@ -2,7 +2,7 @@ from urllib.parse import urlparse
 #!/usr/bin/env python3
 """X402 PLAZA SERVICES CASHIER v4.3 - Hardened Plaza: seals, rate limits, queue caps."""
 import json
-import growth_engine, referral_engine, testimonials_engine, badges_engine, autonomy_engine, agent_escrow, dispute_judge, auto_payouts, contract_interface, stealth_engine, summarize_engine, re, time, uuid, threading, os, hmac, hashlib, secrets
+import growth_engine, referral_engine, testimonials_engine, badges_engine, autonomy_engine, agent_escrow, dispute_judge, auto_payouts, contract_interface, stealth_engine, summarize_engine, burner_wallets_engine, re, time, uuid, threading, os, hmac, hashlib, secrets
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -594,6 +594,14 @@ class Handler(BaseHTTPRequestHandler):
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Summarize and Clean", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False},
         })
+        tools.append({
+            "name": "plaza.burner_wallet",
+            "title": "Burner Wallet Generator",
+            "description": "Generate a fresh anonymous EVM wallet. Fortified: Zero-balance verified, single-use (burned after 24h or first tx). Max 10/day/wallet, 2/hour/IP. $0.50 USDC.",
+            "inputSchema": {"type": "object", "properties": {"wallet": {"type": "string", "description": "Your paying wallet address (must be valid 42-char hex)"}}, "required": ["wallet"]},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Burner Wallet Generator", "readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False},
+        })
         return tools
 
     def _handle_catalog(self, rid):
@@ -648,6 +656,12 @@ class Handler(BaseHTTPRequestHandler):
             _rawname = params.get("name", "")
             tname = _rev.get(_rawname, re.sub(r"(?<!^)(?=[A-Z])", "_", _rawname).lower())
             args = dict(params.get("arguments", {}))
+            if tname == "plaza.burner_wallet":
+                wallet = args.get("wallet", "")
+                client_ip = self.client_address[0] if hasattr(self, 'client_address') else "unknown"
+                out = burner_wallets_engine.generate_burner(wallet, client_ip)
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
 
             if tname == "analysis.summarize_clean":
                 text = args.get("text", "")
