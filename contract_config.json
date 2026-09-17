@@ -2,6 +2,7 @@
   "escrow_contract": "0xC1E75A1F676f8707636A3DD636eBA5cAbf655Ed5",
   "oracle_address": "0x456Ef3C809bF1016A2a2A67946a4C6B13198755c",
   "fee_recipient": "0xb838930bf3dFD467D30979E12c0a94286F86708D",
+  "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   "rpc_url": "https://mainnet.base.org",
   "chain_id": 8453
 }
