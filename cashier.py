@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """X402 PLAZA SERVICES CASHIER v4.3 - Hardened Plaza: seals, rate limits, queue caps."""
 import json
-import growth_engine, referral_engine, testimonials_engine, badges_engine, autonomy_engine, agent_escrow, dispute_judge, auto_payouts, contract_interface, re, time, uuid, threading, os, hmac, hashlib, secrets
+import growth_engine, referral_engine, testimonials_engine, badges_engine, autonomy_engine, agent_escrow, dispute_judge, auto_payouts, contract_interface, stealth_engine, re, time, uuid, threading, os, hmac, hashlib, secrets
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -13,6 +13,7 @@ PRICE_AUDIT = 100000000
 PRICE_PACK = 100000000
 PRICE_NOTARY = 150000000
 PRICE_AIRGAP = 200000000
+PRICE_STEALTH = 5000000  # $5 USDC
 SCANS_PER_PACK = 1000
 CREDITS_FILE = "credits.json"
 NOTARY_FILE = "notary.json"
@@ -570,6 +571,14 @@ class Handler(BaseHTTPRequestHandler):
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Agent-to-Agent Escrow", "readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False},
         })
+        tools.append({
+            "name": "scrape.stealth_residential",
+            "title": "Stealth Residential Scrape",
+            "description": "Bypass enterprise bot walls with 4-layer stealth pipeline. Returns confidence score + freshness metadata. $5 USDC.",
+            "inputSchema": {"type": "object", "properties": {"url": {"type": "string"}, "wallet": {"type": "string"}}, "required": ["url"]},
+            "outputSchema": {"type": "object"},
+            "annotations": {"title": "Stealth Residential Scrape", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": False, "openWorldHint": True},
+        })
         return tools
 
     def _handle_catalog(self, rid):
@@ -651,6 +660,14 @@ class Handler(BaseHTTPRequestHandler):
                 out = badges_engine.get_badge_status(args.get("wallet", ""))
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+            if tname == "scrape.stealth_residential":
+                import stealth_engine
+                url = args.get("url", "")
+                wallet = args.get("wallet", "")
+                out = stealth_engine.scrape_stealth(url, wallet)
+                resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
+                self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+
             if tname == "plaza.how_it_works":
                 out = autonomy_engine.how_it_works()
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
@@ -791,7 +808,7 @@ class Handler(BaseHTTPRequestHandler):
         _p = self._raw_path
         if _p.startswith("/X402PlazaServices"):
             _p = _p[len("/X402PlazaServices"):] or "/"
-        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package", "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research", "/post_hack_autopsy", "/bypass_captcha_and_scrape"}
+        _PAID = {"/scrape_to_json", "/audit_agent_code", "/buy_firewall_credits", "/certify_my_package", "/offline_ai_analysis", "/verify_escrow_work", "/uncensored_exploit_research", "/post_hack_autopsy", "/bypass_captcha_and_scrape", "/stealth_residential_scrape"}
         if _p in _PAID:
             _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _p, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
             _amt = _pi.get("amount") or _pi.get("min") or "0.05"
@@ -812,7 +829,7 @@ class Handler(BaseHTTPRequestHandler):
         _raw_path = self.path.split("?")[0]
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
         _base_path = self.path.split("?")[0]
-        _PAID = {"/scrape_to_json","/audit_agent_code","/buy_firewall_credits","/certify_my_package","/offline_ai_analysis","/verify_escrow_work","/uncensored_exploit_research","/post_hack_autopsy","/bypass_captcha_and_scrape"}
+        _PAID = {"/scrape_to_json","/audit_agent_code","/buy_firewall_credits","/certify_my_package","/offline_ai_analysis","/verify_escrow_work","/uncensored_exploit_research","/post_hack_autopsy","/bypass_captcha_and_scrape", "/stealth_residential_scrape"}
         if _base_path in _PAID:
             _pi = openapi_doc()["paths"].get("/X402PlazaServices" + _base_path, {}).get("post", {}).get("x-payment-info", {}).get("price", {})
             _amt = _pi.get("amount") or _pi.get("min") or "0.05"
@@ -872,6 +889,7 @@ class Handler(BaseHTTPRequestHandler):
             "/certify_my_package": {"price": "150.00 USDC", "desc": "Pain: Nobody trusts your MCP tool or code package. Solution: We issue a cryptographic seal of origin."},
             "/offline_ai_analysis": {"price": "200.00 USDC", "desc": "Pain: You need AI on secrets but can't risk leaks. Solution: Processed by a model with no internet interface."},
             "/verify_escrow_work": {"price": "2.5% (min 0.05 USDC)", "desc": "Pain: Agent A hired Agent B but doesn't know if the work was done. Solution: We verify the evidence and release escrow."},
+            "/stealth_residential_scrape": {"price": "5.00 USDC", "desc": "Bypass enterprise bot walls (Cloudflare/Akamai/DataDome). 4-layer stealth pipeline with confidence metadata. Anti-resource-bomb + anti-cost-burn defenses active."},
             "/uncensored_exploit_research": {"price": "150.00 USDC", "desc": "Pain: Cloud AI refuses to help you research exploits. Solution: Our air-gapped AI has no filters. Refund if it refuses."},
             "/post_hack_autopsy": {"price": "300.00 USDC", "desc": "Pain: Your agent was drained and you don't know how. Solution: We read the memory dump and find the exact breach vector."},
             "/bypass_captcha_and_scrape": {"price": "5.00 USDC", "desc": "Pain: Your agent hits Cloudflare/CAPTCHA walls and dies. Solution: We bypass the wall and give you clean Markdown."}
@@ -1070,6 +1088,8 @@ class Handler(BaseHTTPRequestHandler):
             if not wallet_rate_check((self.headers.get("X-Wallet") or "").lower(), limit=50): return self._send(429, {"error": "VIP wallet rate limit"})
             question = payload.get("question", "Analyze this data."); data = payload.get("data", "")
             verified, sender, tier, amount = verify_payment(proof, PRICE_AIRGAP)
+            if self.path == "/X402PlazaServices/stealth_residential_scrape":
+                verified, sender, tier, amount = verify_payment(proof, PRICE_STEALTH)
             if not verified:
                 return self._send(402, {"x402": {"price": "200.00 USDC", "destination": DEST_WALLET, "accepts": PAYMENT_NOTE, "solana_address": SOLANA_ADDRESS, "instruction": "Air-Gap Analysis: processed by a model with no network interface."}})
             if not AIRGAP_SEM.acquire(blocking=False):
