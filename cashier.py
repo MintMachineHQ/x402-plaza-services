@@ -1295,4 +1295,4 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     print(f"X402 PLAZA SERVICES v6.1 GHOST PROTOCOL LIVE on http://127.0.0.1:{PORT} (Sealed, Rate-Limited, Queue-Capped)")
-    ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+    ThreadingHTTPServer(("0.0.0.0", int(os.environ.get("PORT", 8000))), Handler).serve_forever()

@@ -76,7 +76,11 @@ def submit_work(worker_key, job_id, deliverable_hash):
 
 def oracle_release(job_id):
     """Oracle releases funds to worker."""
-    oracle_key = open(os.path.join(BASE_DIR, "oracle.key")).read().strip()
+    try:
+        oracle_key = open(os.path.join(BASE_DIR, "oracle.key")).read().strip()
+    except FileNotFoundError:
+        oracle_key = None
+        print("⚠️  oracle.key not found - oracle signing disabled (worker self-claim still works)")
     account = Account.from_key(oracle_key)
     nonce = w3.eth.get_transaction_count(account.address)
     tx = contract.functions.oracleRelease(job_id).build_transaction({
@@ -91,7 +95,11 @@ def oracle_release(job_id):
 
 def oracle_refund(job_id):
     """Oracle refunds to client."""
-    oracle_key = open(os.path.join(BASE_DIR, "oracle.key")).read().strip()
+    try:
+        oracle_key = open(os.path.join(BASE_DIR, "oracle.key")).read().strip()
+    except FileNotFoundError:
+        oracle_key = None
+        print("⚠️  oracle.key not found - oracle signing disabled (worker self-claim still works)")
     account = Account.from_key(oracle_key)
     nonce = w3.eth.get_transaction_count(account.address)
     tx = contract.functions.oracleRefund(job_id).build_transaction({
