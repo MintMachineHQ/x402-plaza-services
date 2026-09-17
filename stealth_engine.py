@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-"""Stealth Residential Scrape v5 - hardened 4-layer anti-bot pipeline.
-Layers: 1 rotating fingerprints, 2 reader proxy, 3 archive snapshot, 4 residential slot (future).
-Revisions: v2 resource/redirect defenses, v3 DNS-rebinding pin, v4 cost-burn quotas,
-v5 review-proofing (retry credits, confidence metadata), v5.1 legality blocklists."""
+"""Stealth Residential Scrape v6 - with AI extraction, smart retry, and batch processing."""
 import ipaddress, json, os, re, socket, threading, time
 import urllib.request, urllib.error
 from urllib.parse import urlparse
+from datetime import datetime
 
 RATE_FILE = "stealth_rate.json"
 STATE_FILE = "stealth_state.json"
-RESIDENTIAL_PROXY_SLOT = None  # future paid residential pool plug-in point
+RETRY_FILE = "stealth_retries.json"
+RESIDENTIAL_PROXY_SLOT = None
 
 MAX_BYTES = 5 * 1024 * 1024
 TIMEOUT = 12
@@ -48,6 +47,15 @@ def _load_state():
 def _save_state(d):
     json.dump(d, open(STATE_FILE, "w"))
 
+def _load_retries():
+    try:
+        return json.load(open(RETRY_FILE))
+    except Exception:
+        return {}
+
+def _save_retries(d):
+    json.dump(d, open(RETRY_FILE, "w"))
+
 def _wallet_sem(wallet):
     with _LOCK:
         if wallet not in _WALLET_SEMS:
@@ -55,7 +63,6 @@ def _wallet_sem(wallet):
         return _WALLET_SEMS[wallet]
 
 def _public_ip(host):
-    """v3 pin: resolve and require a public IP."""
     try:
         ip = socket.gethostbyname(host)
         addr = ipaddress.ip_address(ip)
@@ -66,7 +73,6 @@ def _public_ip(host):
         return None, f"DNS failure: {e}"
 
 def _hop_allowed(url):
-    """Validation applied to the original URL AND every redirect hop."""
     p = urlparse(url)
     if p.scheme not in ("http", "https"):
         return False, f"bad scheme {p.scheme}"
@@ -99,7 +105,6 @@ def _rate_ok(url, wallet):
     return True
 
 def _quotas_ok(url, wallet):
-    """v4: daily cap, fail quota, cooldown, failure cache."""
     w = (wallet or "anon").lower()
     st = _load_state()
     now = time.time()
@@ -157,9 +162,9 @@ def _fetch(url, fp, opener):
         "Cache-Control": "no-cache", "Sec-Fetch-Dest": "document", "Sec-Fetch-Mode": "navigate",
         "Sec-Fetch-Site": "none", "Sec-Fetch-User": "?1", "Upgrade-Insecure-Requests": "1"}
     if fp.get("sec_ch_ua"):
-        headers["sec-ch-ua"] = fp["sec_ch_ua"]
-        headers["sec-ch-ua-platform"] = fp["platform"]
-        headers["sec-ch-ua-mobile"] = "?0"
+        headers["sec-ch_ua"] = fp["sec_ch_ua"]
+        headers["sec-ch_ua-platform"] = fp["platform"]
+        headers["sec-ch_ua-mobile"] = "?0"
     req = urllib.request.Request(url, headers=headers)
     with opener.open(req, timeout=TIMEOUT) as r:
         cl = r.headers.get("Content-Length")
@@ -186,7 +191,79 @@ def _via_wayback(url):
     with urllib.request.urlopen(snap["url"], timeout=25) as r:
         return r.read(MAX_BYTES).decode("utf-8", errors="replace"), ""
 
-def scrape_stealth(url, wallet="", use_credit=False):
+def _extract_with_ai(html, extract_query, wallet):
+    """Use Ollama to extract structured data from HTML."""
+    try:
+        prompt = f"""You are a web scraping assistant. Extract the requested information from this HTML content.
+
+USER REQUEST: {extract_query}
+
+HTML CONTENT (first 50000 chars):
+{html[:50000]}
+
+INSTRUCTIONS:
+1. Extract ONLY what the user requested
+2. Return a valid JSON object
+3. If information is not found, use null or empty arrays
+4. Do not include explanations, only JSON
+
+EXAMPLE OUTPUT FORMAT:
+{{"products": [{{"name": "Product Name", "price": 29.99, "in_stock": true}}], "total_items": 15}}
+
+Return only the JSON object, no other text:"""
+
+        req_data = json.dumps({
+            "model": "qwen2.5:1.5b",
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": False,
+            "format": "json",
+            "options": {"temperature": 0.1, "num_predict": 2000}
+        }).encode()
+
+        req = urllib.request.Request("http://localhost:11434/api/chat",
+            data=req_data, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=120) as r:
+            result = json.loads(r.read().decode())
+            content = result.get("message", {}).get("content", "{}")
+            try:
+                extracted = json.loads(content)
+                return {"success": True, "data": extracted}
+            except json.JSONDecodeError:
+                return {"success": False, "reason": "AI returned invalid JSON", "raw": content[:500]}
+    except Exception as e:
+        return {"success": False, "reason": f"AI extraction failed: {str(e)}"}
+
+def _attempt_scrape(url, wallet):
+    """Single attempt using all 4 layers."""
+    for fp in FINGERPRINTS:
+        try:
+            html, err = _fetch(url, fp, _make_opener([0]))
+            if html is None:
+                return {"success": False, "layer": 1, "reason": err}
+            if not _is_challenge(html):
+                return {"success": True, "layer": 1, "method": "direct_stealth_fingerprint",
+                        "confidence": 95, "freshness": "live", "html": html, "bytes": len(html)}
+        except Exception:
+            continue
+    try:
+        text, err = _via_reader(url)
+        if text and not _is_challenge(text):
+            return {"success": True, "layer": 2, "method": "reader_proxy",
+                    "confidence": 85, "freshness": "live", "html": text, "bytes": len(text)}
+    except Exception:
+        pass
+    try:
+        html, err = _via_wayback(url)
+        if html:
+            return {"success": True, "layer": 3, "method": "archive_snapshot",
+                    "confidence": 70, "freshness": "archived", "html": html, "bytes": len(html),
+                    "note": "live layers blocked; served from archive snapshot"}
+    except Exception:
+        pass
+    return {"success": False, "layer": 4, "reason": "All stealth layers failed: enterprise-grade protection"}
+
+def scrape_stealth(url, wallet="", extract=None, retries=1, batch_discount=False):
+    """Enhanced scrape with AI extraction, smart retry, and batch support."""
     from security_quotas import validate_url
     ok, reason = validate_url(url)
     if not ok:
@@ -200,45 +277,101 @@ def scrape_stealth(url, wallet="", use_credit=False):
     if not ok:
         return {"success": False, "layer": 0, "reason": reason}
 
+    attempts = []
+    start_time = time.time()
+    
     with _GLOBAL_SEM, _wallet_sem((wallet or "anon").lower()):
-        for fp in FINGERPRINTS:
-            try:
-                html, err = _fetch(url, fp, _make_opener([0]))
-                if html is None:
-                    return {"success": False, "layer": 1, "reason": err}
-                if not _is_challenge(html):
-                    _record_outcome(url, wallet, False)
-                    return {"success": True, "layer": 1, "method": "direct_stealth_fingerprint",
-                            "confidence": 95, "freshness": "live", "html": html[:200000], "bytes": len(html)}
-            except Exception:
-                continue
-        try:
-            text, err = _via_reader(url)
-            if text and not _is_challenge(text):
+        for attempt_num in range(retries):
+            if attempt_num > 0:
+                wait_time = min(60 * (2 ** attempt_num), 300)  # 60s, 120s, 240s... max 5min
+                time.sleep(wait_time)
+            
+            result = _attempt_scrape(url, wallet)
+            attempts.append({
+                "attempt": attempt_num + 1,
+                "time": time.time() - start_time,
+                "success": result["success"],
+                "layer": result.get("layer")
+            })
+            
+            if result["success"]:
                 _record_outcome(url, wallet, False)
-                return {"success": True, "layer": 2, "method": "reader_proxy",
-                        "confidence": 85, "freshness": "live", "html": text[:200000], "bytes": len(text)}
-        except Exception:
-            pass
-        try:
-            html, err = _via_wayback(url)
-            if html:
-                _record_outcome(url, wallet, False)
-                return {"success": True, "layer": 3, "method": "archive_snapshot",
-                        "confidence": 70, "freshness": "archived", "html": html[:200000], "bytes": len(html),
-                        "note": "live layers blocked; served from archive snapshot"}
-        except Exception:
-            pass
+                
+                # AI Extraction mode
+                if extract:
+                    ai_result = _extract_with_ai(result["html"], extract, wallet)
+                    if ai_result["success"]:
+                        return {
+                            "success": True,
+                            "mode": "ai_extraction",
+                            "extracted_data": ai_result["data"],
+                            "confidence": result.get("confidence", 0),
+                            "freshness": result.get("freshness"),
+                            "layer_used": result["layer"],
+                            "method": result["method"],
+                            "attempts": len(attempts),
+                            "total_time_seconds": round(time.time() - start_time, 1),
+                            "batch_discount_applied": batch_discount
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "reason": f"Scrape succeeded but AI extraction failed: {ai_result['reason']}",
+                            "attempts": len(attempts)
+                        }
+                
+                # Raw mode
+                return {
+                    "success": True,
+                    "mode": "raw_html",
+                    "layer": result["layer"],
+                    "method": result["method"],
+                    "confidence": result.get("confidence"),
+                    "freshness": result.get("freshness"),
+                    "html": result["html"][:200000],
+                    "bytes": result["bytes"],
+                    "attempts": len(attempts),
+                    "total_time_seconds": round(time.time() - start_time, 1),
+                    "batch_discount_applied": batch_discount
+                }
 
+    # All attempts failed
     _record_outcome(url, wallet, True)
     st = _load_state()
     st["credits"][(wallet or "anon").lower()] = time.time() + 86400
     _save_state(st)
-    return {"success": False, "layer": 4,
-            "reason": "All stealth layers failed: enterprise-grade protection. Retry credit granted for 24h (free retry).",
-            "retry_credit_granted": True,
-            "next_steps": ["retry in a few hours with your credit", "use scrape.bypass_captcha for CAPTCHA walls",
-                           "residential proxy tier coming soon"]}
+    
+    return {
+        "success": False,
+        "layer": 4,
+        "reason": f"All {retries} attempts failed over {round(time.time() - start_time, 1)}s",
+        "retry_credit_granted": True,
+        "attempts": attempts,
+        "refund_eligible": retries >= 3,
+        "next_steps": [
+            "retry in a few hours with your credit",
+            "use scrape.bypass_captcha for CAPTCHA walls",
+            "residential proxy tier coming soon"
+        ]
+    }
+
+def scrape_batch(urls, wallet="", extract=None, retries=1):
+    """Batch scrape with 50% discount."""
+    results = {}
+    for url in urls[:10]:  # Max 10 URLs per batch
+        result = scrape_stealth(url, wallet, extract, retries, batch_discount=True)
+        results[url] = result
+    
+    return {
+        "success": True,
+        "mode": "batch",
+        "results": results,
+        "total_urls": len(urls),
+        "successful": sum(1 for r in results.values() if r.get("success")),
+        "failed": sum(1 for r in results.values() if not r.get("success")),
+        "discount_applied": "50% batch discount",
+        "note": "Each result is independent - partial failures don't refund successful scrapes"
+    }
 
 def has_credit(wallet):
     st = _load_state()

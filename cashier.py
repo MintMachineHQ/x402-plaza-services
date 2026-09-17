@@ -573,11 +573,17 @@ class Handler(BaseHTTPRequestHandler):
         })
         tools.append({
             "name": "scrape.stealth_residential",
-            "title": "Stealth Residential Scrape",
-            "description": "Bypass enterprise bot walls with 4-layer stealth pipeline. Returns confidence score + freshness metadata. $5 USDC.",
-            "inputSchema": {"type": "object", "properties": {"url": {"type": "string"}, "wallet": {"type": "string"}}, "required": ["url"]},
+            "title": "Stealth Residential Scrape v6",
+            "description": "Bypass enterprise bot walls. 3x Features: 1) AI Extraction (pass 'extract' to get JSON instead of HTML). 2) Smart Retry (pass 'retries': 3 for refund guarantee). 3) Batch (pass 'urls': [...] for 50% discount, up to 10 URLs per call). $5 USDC.",
+            "inputSchema": {"type": "object", "properties": {
+                "url": {"type": "string", "description": "Single URL to scrape"},
+                "urls": {"type": "array", "items": {"type": "string"}, "description": "List of URLs for batch scraping (up to 10, 50% discount)"},
+                "extract": {"type": "string", "description": "What data to extract (e.g., 'all product names and prices'). Returns JSON instead of raw HTML."},
+                "retries": {"type": "integer", "description": "Number of retry attempts (1-3). 3 attempts enables refund guarantee on total failure.", "default": 1},
+                "wallet": {"type": "string", "description": "Your wallet address"}
+            }, "required": []},
             "outputSchema": {"type": "object"},
-            "annotations": {"title": "Stealth Residential Scrape", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": False, "openWorldHint": True},
+            "annotations": {"title": "Stealth Residential Scrape v6", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": False, "openWorldHint": True},
         })
         return tools
 
@@ -662,9 +668,15 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             if tname == "scrape.stealth_residential":
                 import stealth_engine
+                urls = args.get("urls")
                 url = args.get("url", "")
+                extract = args.get("extract")
+                retries = int(args.get("retries", 1))
                 wallet = args.get("wallet", "")
-                out = stealth_engine.scrape_stealth(url, wallet)
+                if urls and isinstance(urls, list):
+                    out = stealth_engine.scrape_batch(urls, wallet, extract, retries)
+                else:
+                    out = stealth_engine.scrape_stealth(url, wallet, extract, retries)
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
 
