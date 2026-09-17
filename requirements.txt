@@ -1,0 +1,4 @@
+web3==7.11.1
+eth-account==0.13.7
+playwright==1.55.0
+curl_cffi==0.13.0
