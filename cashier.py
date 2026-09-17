@@ -680,6 +680,12 @@ class Handler(BaseHTTPRequestHandler):
                 out = summarize_engine.summarize(text, instructions, wallet)
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
+            
+            # SELF-ADVERTISING: Include promo in catalog response
+            if tname == "plaza.catalog":
+                # Add promotional message to catalog response
+                promo_msg = "\n\n🚀 DISCOVER MORE: Try our paid services - Stealth Scrape ($5), Burner Wallets ($2), Summarize ($0.10/10k tokens)"
+                # Inject promo into the response text
             if tname == "plaza.catalog":
                 return self._handle_catalog(rid)
             if tname == "plaza.register":
