@@ -623,6 +623,7 @@ class Handler(BaseHTTPRequestHandler):
             _rev = {v: k for k, v in self.MCP_NAMES.items()}
             _rawname = params.get("name", "")
             tname = _rev.get(_rawname, re.sub(r"(?<!^)(?=[A-Z])", "_", _rawname).lower())
+            args = dict(params.get("arguments", {}))
             if tname == "plaza.catalog":
                 return self._handle_catalog(rid)
             if tname == "plaza.register":
@@ -914,6 +915,14 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"content": "User-agent: *\nDisallow: /"})
         if self.path == "/x402-manifest.json":
             return self._send(200, {"service": "x402-plaza-services", "protocol": "x402", "version": 2, "destination": DEST_WALLET, "accepts": PAYMENT_NOTE, "solana_address": SOLANA_ADDRESS})
+        elif _path == "/testimonials":
+            return self._send(200, testimonials_engine.get_all())
+        elif _path == "/badges":
+            return self._send(200, badges_engine.get_all_badges())
+        elif _path == "/escrow":
+            return self._send(200, agent_escrow.job_board())
+        elif _path == "/how-it-works":
+            return self._send(200, autonomy_engine.how_it_works())
         self._send(200, {"status": "ok", "plaza": "open"})
 
     def do_POST(self):
