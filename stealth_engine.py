@@ -290,11 +290,11 @@ def _via_playwright(url):
 
 def _attempt_scrape(url, wallet):
     """Single attempt using all 4 layers."""
-        # Layer 0.5: curl_cffi (TLS fingerprint spoofing, fast)
-        html, err = _via_curl_cffi(url)
-        if html:
-            return {"success": True, "layer": 0.5, "method": "curl_cffi_tls_spoofing",
-                    "confidence": 92, "freshness": "live", "html": html, "bytes": len(html)}
+    # Layer 0.5: curl_cffi (TLS fingerprint spoofing, fast)
+    html, err = _via_curl_cffi(url)
+    if html:
+        return {"success": True, "layer": 0.5, "method": "curl_cffi_tls_spoofing",
+                "confidence": 92, "freshness": "live", "html": html, "bytes": len(html)}
     for fp in FINGERPRINTS:
         try:
             html, err = _fetch(url, fp, _make_opener([0]))
