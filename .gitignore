@@ -67,3 +67,4 @@ plaza_secret.key
 *.swo
 *~
 .DS_Store
+seo_cron.json
