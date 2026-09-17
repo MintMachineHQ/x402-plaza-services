@@ -2,10 +2,12 @@
 """Interface to PlazaEscrow smart contract on Base."""
 import json, os
 from web3 import Web3
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 from eth_account import Account
 
 # Load config
-config = json.load(open("contract_config.json"))
+config = json.load(open(os.path.join(BASE_DIR, "contract_config.json")))
 CONTRACT_ADDR = config["escrow_contract"]
 ORACLE_ADDR = config["oracle_address"]
 USDC_ADDR = config["usdc"]
@@ -74,7 +76,7 @@ def submit_work(worker_key, job_id, deliverable_hash):
 
 def oracle_release(job_id):
     """Oracle releases funds to worker."""
-    oracle_key = open("oracle.key").read().strip()
+    oracle_key = open(os.path.join(BASE_DIR, "oracle.key")).read().strip()
     account = Account.from_key(oracle_key)
     nonce = w3.eth.get_transaction_count(account.address)
     tx = contract.functions.oracleRelease(job_id).build_transaction({
@@ -89,7 +91,7 @@ def oracle_release(job_id):
 
 def oracle_refund(job_id):
     """Oracle refunds to client."""
-    oracle_key = open("oracle.key").read().strip()
+    oracle_key = open(os.path.join(BASE_DIR, "oracle.key")).read().strip()
     account = Account.from_key(oracle_key)
     nonce = w3.eth.get_transaction_count(account.address)
     tx = contract.functions.oracleRefund(job_id).build_transaction({
