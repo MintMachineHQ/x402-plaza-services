@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Scrape Bestbuy with Claude | X402 Plaza</title>
+<meta name="description" content="Claude agents cannot fetch Bestbuy directly - bot protection kills the request. Wire Claude to Plaza's MCP endpoint and it gets Bestbuy data as struct">
+<link rel="canonical" href="https://mintmachinehq.github.io/x402-plaza-services/scrape-bestbuy-with-claude.html">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Service", "name": "Scrape Bestbuy with Claude", "provider": {"@type": "Organization", "name": "X402 Plaza Services", "url": "https://mintmachinehq.github.io/x402-plaza-services"}, "offers": {"@type": "Offer", "price": "5.00", "priceCurrency": "USD"}, "areaServed": "Worldwide", "serviceType": "AI agent tool"}</script>
+<style>body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 16px;line-height:1.6}
+.cta{background:#06c;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;display:inline-block}
+code{background:#f2f2f2;padding:2px 6px;border-radius:4px}footer{margin-top:40px;color:#777;font-size:.85em;border-top:1px solid #ddd;padding-top:12px}</style>
+</head><body>
+<h1>Scrape Bestbuy with Claude</h1>
+<p>These sites fingerprint TLS, headers and IP reputation. Naive scrapers get 403ed instantly.</p>
+<p>Claude agents cannot fetch Bestbuy directly - bot protection kills the request. Wire Claude to Plaza's MCP endpoint and it gets Bestbuy data as structured JSON, paid per call in USDC.</p>
+<h2>Endpoint</h2>
+<p><code>POST https://x402-plaza-services.onrender.com/mcp</code> - x402 payment in USDC on Base. Catalog: <a href="https://x402-plaza-services.onrender.com/catalog">https://x402-plaza-services.onrender.com/catalog</a></p>
+<h2>Live network status</h2>
+<p id="stats">Loading live stats...</p>
+<h2>More from Plaza</h2>
+<ul><li><a href="https://mintmachinehq.github.io/x402-plaza-services/scrape-bigcommerce-with-claude.html">Scrape Bigcommerce with Claude</a></li><li><a href="https://mintmachinehq.github.io/x402-plaza-services/scrape-target-with-python.html">Scrape Target with Python</a></li><li><a href="https://mintmachinehq.github.io/x402-plaza-services/scrape-monster-with-python.html">Scrape Monster with Python</a></li><li><a href="https://mintmachinehq.github.io/x402-plaza-services/scrape-monster-with-claude.html">Scrape Monster with Claude</a></li><li><a href="https://mintmachinehq.github.io/x402-plaza-services/scrape-monster-ai-agent.html">Scrape Monster with an AI Agent</a></li><li><a href="https://mintmachinehq.github.io/x402-plaza-services/scrape-woocommerce-ai-agent.html">Scrape Woocommerce with an AI Agent</a></li></ul>
+<p><a class="cta" href="https://x402-plaza-services.onrender.com/catalog">View live catalog</a> &middot; <a href="https://x402-plaza-services.onrender.com/llms.txt">llms.txt</a> &middot; <a href="https://mintmachinehq.github.io/x402-plaza-services/index.html">All services</a></p>
+<footer>USDC on Base &middot; escrow contract 0xC1E75A1F676f8707636A3DD636eBA5cAbf655Ed5 &middot; X402 Plaza Services</footer>
+<script>fetch("https://x402-plaza-services.onrender.com/status").then(r=>r.json()).then(d=>{document.getElementById("stats").textContent="Live: "+d.requests_seen+" requests served | uptime "+Math.round(d.uptime_seconds/3600)+"h | status: "+d.status;}).catch(()=>{document.getElementById("stats").textContent="Live endpoint: https://x402-plaza-services.onrender.com/status";});</script>
+</body></html>

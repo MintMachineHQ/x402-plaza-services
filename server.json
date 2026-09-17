@@ -1,0 +1,6 @@
+{
+  "name": "io.github.mintmachinehq/x402-plaza-services",
+  "title": "X402 Plaza Services",
+  "description": "Pay-per-call marketplace for AI agents: stealth scraping ($5), summarization ($0.10/10k), burner wallets ($2), agent escrow on Base. x402/USDC.",
+  "remotes": [{"type": "streamable-http", "url": "https://x402-plaza-services.onrender.com/mcp"}]
+}
