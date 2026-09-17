@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Stealth Residential Scrape v6 - with AI extraction, smart retry, and batch processing."""
 import ipaddress, json, os, re, socket, threading, time
+try:
+    from curl_cffi import requests as cffi_requests
+    HAS_CURL_CFFI = True
+except ImportError:
+    HAS_CURL_CFFI = False
 import urllib.request, urllib.error
 from urllib.parse import urlparse
 from datetime import datetime
@@ -233,8 +238,63 @@ Return only the JSON object, no other text:"""
     except Exception as e:
         return {"success": False, "reason": f"AI extraction failed: {str(e)}"}
 
+def _via_curl_cffi(url):
+    """Layer 0.5: curl_cffi with TLS fingerprint spoofing (fast, beats basic Cloudflare)."""
+    if not HAS_CURL_CFFI:
+        return None, "curl_cffi not installed"
+    try:
+        r = cffi_requests.get(url, impersonate="chrome124", timeout=15)
+        if r.status_code != 200:
+            return None, f"HTTP {r.status_code}"
+        html = r.text
+        if _is_challenge(html):
+            return None, "challenge detected"
+        return html, ""
+    except Exception as e:
+        return None, f"curl_cffi error: {str(e)[:100]}"
+
+def _via_playwright(url):
+    """Layer 1.5: headless Chromium with anti-detection init scripts.
+    Blocks images/media/fonts (saves bandwidth + time), masks webdriver flags,
+    waits 2.5s so auto-solving challenges (Turnstile) can pass themselves."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception:
+        return None, "playwright not installed"
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True, args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox", "--disable-dev-shm-usage"])
+            ctx = browser.new_context(
+                user_agent=FINGERPRINTS[0]["ua"],
+                viewport={"width": 1366, "height": 768},
+                locale="en-US", timezone_id="America/New_York")
+            ctx.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+                window.chrome = {runtime: {}};
+            """)
+            page = ctx.new_page()
+            page.route("**/*", lambda route: route.abort()
+                       if route.request.resource_type in ("image", "media", "font")
+                       else route.continue_())
+            page.goto(url, timeout=20000, wait_until="domcontentloaded")
+            page.wait_for_timeout(2500)
+            html = page.content()
+            browser.close()
+            return html, ""
+    except Exception as e:
+        return None, f"playwright error: {str(e)[:120]}"
+
 def _attempt_scrape(url, wallet):
     """Single attempt using all 4 layers."""
+        # Layer 0.5: curl_cffi (TLS fingerprint spoofing, fast)
+        html, err = _via_curl_cffi(url)
+        if html:
+            return {"success": True, "layer": 0.5, "method": "curl_cffi_tls_spoofing",
+                    "confidence": 92, "freshness": "live", "html": html, "bytes": len(html)}
     for fp in FINGERPRINTS:
         try:
             html, err = _fetch(url, fp, _make_opener([0]))
@@ -245,6 +305,11 @@ def _attempt_scrape(url, wallet):
                         "confidence": 95, "freshness": "live", "html": html, "bytes": len(html)}
         except Exception:
             continue
+        # Layer 1.5: Playwright headless Chromium (beats JS challenges)
+        html, err = _via_playwright(url)
+        if html and not _is_challenge(html):
+            return {"success": True, "layer": 1.5, "method": "playwright_stealth_chromium",
+                    "confidence": 90, "freshness": "live", "html": html, "bytes": len(html)}
     try:
         text, err = _via_reader(url)
         if text and not _is_challenge(text):
