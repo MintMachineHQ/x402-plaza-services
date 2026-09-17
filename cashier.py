@@ -597,7 +597,7 @@ class Handler(BaseHTTPRequestHandler):
         tools.append({
             "name": "plaza.burner_wallet",
             "title": "Burner Wallet Generator",
-            "description": "Generate a fresh anonymous EVM wallet. Fortified: Zero-balance verified, single-use (burned after 24h or first tx). Max 10/day/wallet, 2/hour/IP. $0.50 USDC.",
+            "description": "Generate a fresh anonymous EVM wallet. Fortified: Zero-balance verified, single-use (burned after 24h or first tx). Max 10/day/wallet, 2/hour/IP. $2.00 USDC.",
             "inputSchema": {"type": "object", "properties": {"wallet": {"type": "string", "description": "Your paying wallet address (must be valid 42-char hex)"}}, "required": ["wallet"]},
             "outputSchema": {"type": "object"},
             "annotations": {"title": "Burner Wallet Generator", "readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False},
