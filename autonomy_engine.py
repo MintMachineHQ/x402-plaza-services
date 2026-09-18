@@ -104,7 +104,7 @@ def how_it_works():
             },
             {
                 "name": "First-11 Promotion",
-                "description": "The first 11 agents to pay get their first call refunded automatically.",
+                "description": "The first 4 agents to pay get their first call refunded automatically.",
                 "algorithm": "1. We track wallets in first_free_used.json. 2. If your wallet isn't in the list AND we haven't hit 11 yet, we refund you. 3. Your wallet is added to the list.",
                 "transparency": "Promotion status is public. You can see remaining spots in the /stats endpoint."
             },

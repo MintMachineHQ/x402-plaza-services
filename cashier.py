@@ -119,12 +119,15 @@ def _agent_card():
 def _status():
     try: sh = _json.load(open(os.path.join(_HERE, "shield_state.json")))
     except Exception: sh = {}
+    import grand_opening
+    promo = grand_opening.get_promo_status()
     return _json.dumps({"service": "x402-plaza-services", "status": "live",
         "uptime_seconds": int(_time.time() - _BOOT),
         "requests_seen": sum(len(v) for v in sh.get("ip_hits", {}).values()),
         "banned_wallets": len(sh.get("wallet_bans", [])),
         "network": "base", "contract": "0xC1E75A1F676f8707636A3DD636eBA5cAbf655Ed5",
-        "catalog": PLAZA_HOST + "/catalog"}), "application/json"
+        "catalog": PLAZA_HOST + "/catalog",
+        "grand_opening_promo": promo}), "application/json"
 
 def _cron():
     import urllib.request as _ur
