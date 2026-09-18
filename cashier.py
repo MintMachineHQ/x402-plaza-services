@@ -126,7 +126,7 @@ def _status():
         "requests_seen": sum(len(v) for v in sh.get("ip_hits", {}).values()),
         "banned_wallets": len(sh.get("wallet_bans", [])),
         "network": "base", "contract": "0xC1E75A1F676f8707636A3DD636eBA5cAbf655Ed5",
-        "catalog": PLAZA_HOST + "/catalog",
+        "grand_opening_promo": promo, "catalog": PLAZA_HOST + "/catalog",
         "grand_opening_promo": promo}), "application/json"
 
 def _cron():
