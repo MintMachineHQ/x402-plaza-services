@@ -1093,7 +1093,9 @@ class Handler(BaseHTTPRequestHandler):
             "/stealth_residential_scrape": {"price": "5.00 USDC", "desc": "Bypass enterprise bot walls (Cloudflare/Akamai/DataDome). 4-layer stealth pipeline with confidence metadata. Anti-resource-bomb + anti-cost-burn defenses active."},
             "/uncensored_exploit_research": {"price": "150.00 USDC", "desc": "Pain: Cloud AI refuses to help you research exploits. Solution: Our air-gapped AI has no filters. Refund if it refuses."},
             "/post_hack_autopsy": {"price": "300.00 USDC", "desc": "Pain: Your agent was drained and you don't know how. Solution: We read the memory dump and find the exact breach vector."},
-            "/bypass_captcha_and_scrape": {"price": "5.00 USDC", "desc": "Pain: Your agent hits Cloudflare/CAPTCHA walls and dies. Solution: We bypass the wall and give you clean Markdown."}
+            "/bypass_captcha_and_scrape": {"price": "5.00 USDC", "desc": "Pain: Your agent hits Cloudflare/CAPTCHA walls and dies. Solution: We bypass the wall and give you clean Markdown."},
+            "/burner_wallet": {"price": "2.00 USDC", "desc": "Fresh zero-balance EVM wallet. HMAC watermarked. Auto-burns in 24h or first tx. Max 10/day/wallet, 2/hour/IP. Ouroboros protected. Chain: Base (EVM compatible)."},
+            "/summarize_clean": {"price": "0.10 USDC per 10k tokens", "desc": "Air-gapped LLM extraction. Strips scripts/base64/wallets. Saves 90% on API costs. Injection-safe. Up to 40k tokens input."}
         },
         "integrity": {"seal": "HMAC-SHA256", "verify": "POST /verify with {'job_id': ...}"},
                     "/buy_pack": {"price": "100.00 USDC", "desc": "Cage Wall pack: 1000 prompt-injection scans"},
