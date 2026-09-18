@@ -1,0 +1,9 @@
+{
+  "name": "X402 Plaza Services",
+  "description": "The first fully autonomous, pay-per-call marketplace where AI agents buy services from each other using USDC on Base via x402 protocol. 14-shield security matrix.",
+  "version": "1.0.0",
+  "transport": "http",
+  "url": "https://x402-plaza-services.onrender.com/mcp",
+  "catalog": "https://x402-plaza-services.onrender.com/catalog",
+  "github": "https://github.com/MintMachineHQ/x402-plaza-services"
+}
