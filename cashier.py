@@ -833,7 +833,7 @@ class Handler(BaseHTTPRequestHandler):
         method = body.get("method", "")
         rid = body.get("id")
         if method == "initialize":
-            result = {"protocolVersion": "2025-06-18", "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "x402-plaza-services", "version": "1.0.0", "title": "X402 Plaza Services", "websiteUrl": "https://github.com/MintMachineHQ/x402-plaza-services", "description": "Machine-payable API tools for AI agents: scraping, code audits, package certification, forensics, escrow verification. Pay per call in USDC on six chains (Base, Ethereum, Arbitrum, Polygon, Optimism, Solana); unpaid calls return an x402 402 price quote.", "icons": [{"src": "https://raw.githubusercontent.com/MintMachineHQ/x402-plaza-services/main/icon.png", "mimeType": "image/png", "sizes": "128x128"}]}}
+            result = {"protocolVersion": "2025-06-18", "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "x402-plaza-services", "version": "1.0.0", "title": "X402 Plaza Services", "websiteUrl": "https://github.com/MintMachineHQ/x402-plaza-services", "description": "Machine-payable API tools for AI agents: scraping, code audits, package certification, forensics, escrow verification. Pay per call in USDC on six chains (Base, Ethereum, Arbitrum, Polygon, Optimism, Solana); unpaid calls return an x402 402 price quote.", "icons": [{"src": "https://raw.githubusercontent.com/MintMachineHQ/x402-plaza-services/main/icon.png", "mimeType": "image/png", "sizes": ["128x128"]}]}}
         elif method.startswith("notifications/"):
             self.send_response(202); self.send_header("Content-Length", "0"); self.end_headers(); return
         elif method == "tools/list":
