@@ -572,7 +572,7 @@ class Handler(BaseHTTPRequestHandler):
     def client_ip(self):
         return self.headers.get("X-Forwarded-For", self.client_address[0]).split(",")[0].strip()
 
-    def _send(self, code, obj):
+    def _send(self, code, obj, content_type='application/json'):
 
         if code == 402 and isinstance(obj, dict):
             _x = obj.get("x402") if isinstance(obj.get("x402"), dict) else {}
@@ -599,9 +599,12 @@ class Handler(BaseHTTPRequestHandler):
                 "outputSchema": {"input": {"type": "object", "properties": {}, "required": []}, "output": {"type": "object", "properties": {"result": {"type": "object"}, "seal": {"type": "string"}}}}
             }]
             self._x402_www = f'x402 version="2", network="base", resource="{_rurl}", description="X402 Plaza Services", amount="{_atomic}", asset="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", payTo="{DEST_WALLET}"'
-        body = json.dumps(obj, indent=2).encode()
+        if isinstance(obj, str):
+            body = obj.encode()
+        else:
+            body = json.dumps(obj, indent=2).encode()
         self.send_response(code)
-        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Type", content_type)
         self.send_header("ngrok-skip-browser-warning", "true")
         self.send_header("Content-Length", str(len(body)))
         if code == 402 and isinstance(obj, dict):
