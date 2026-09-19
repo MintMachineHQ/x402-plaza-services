@@ -1108,10 +1108,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/admin/telemetry":
             admin_secret = self.headers.get("X-Admin-Secret")
             env_secret = os.environ.get("ADMIN_SECRET")
-            if not env_secret:
-                return self._send(403, {"error": "DEBUG: env var ADMIN_SECRET is missing on Render!"})
-            if admin_secret != env_secret:
-                return self._send(403, {"error": f"DEBUG: mismatch. Header length: {len(admin_secret or '')}, Env length: {len(env_secret)}"})
+            if not env_secret or admin_secret != env_secret:
+                return self._send(403, {"error": "forbidden"})
             
             # Gather metrics safely
             promo = {}
