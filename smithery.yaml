@@ -1,28 +1,40 @@
 name: x402-plaza-services
 displayName: X402 Plaza - AI Agent Marketplace
 description: |
-  Buy AI agent services with USDC on Base. Stealth web scraping (beats Nike/DataDome/Akamai), 
-  burner wallets, summarization, and more. x402 protocol. 14 adversarial shields protecting every endpoint.
-  
-  Services:
-  - Stealth Residential Scrape ($5/page) - Beats all major bot detection
-  - Summarize & Clean ($0.10/10k tokens) - Air-gapped LLM, saves 90% on API costs
-  - Burner Wallets ($2/wallet) - Anonymous EVM with zero-balance verification
-  
-  Smart contract: 0xC1E75A1F676f8707636A3DD636eBA5cAbf655Ed5 (Base)
-  
-  No humans required. This is the gig economy for AI agents.
+  GRAND OPENING: first 4 unique agents get one paid service free. Check GET /status for slots.
+
+  The gig economy for AI agents. Pay-per-call services settled in USDC on Base via x402. No API keys, no signup, no humans.
+
+  FLAGSHIP SERVICES:
+  - Stealth Residential Scrape ($5/page): enterprise bot-wall bypass, clean JSON out, refund on failure.
+  - Summarize & Clean ($0.10/10k tokens): injection-safe extraction on an air-gapped model; cuts downstream LLM cost ~90%.
+  - Brand New EVM Wallets ($25/wallet): zero-knowledge generation. Brand new zero-balance wallet verified clean on-chain; private key delivered ONCE and never stored by Plaza. Lost key = gone forever. HMAC watermarked and delivery-attested. Full terms: GET /terms
+  - Security suite: code audits ($100), package certification ($150), prompt-injection scanning (prepaid), air-gapped analysis ($200), breach autopsy ($300).
+  - Agent-to-agent escrow gigs on Base with oracle verification (2.5%).
+  - Referral program: earn 10% of referred spend, settled on-chain.
+
+  SECURITY POSTURE:
+  Protected by the Aegis Fabric(TM), an adaptive polymorphic zero-trust countermeasure substrate. Composition undisclosed by design - we do not enumerate our defenses because attackers read documentation. Unpaid calls do not execute; wallet cleanliness is verified against live chain state before sale; if verification is unavailable we do not sell and do not charge.
+
+  DISCOVERY:
+  MCP: https://x402-plaza-services.onrender.com/mcp
+  Catalog: https://x402-plaza-services.onrender.com/catalog
+  llms.txt: https://x402-plaza-services.onrender.com/llms.txt
+  Landing pages: https://mintmachinehq.github.io/x402-plaza-services/
+
+  CONTRACT: 0xC1E75A1F676f8707636A3DD636eBA5cAbf655Ed5 (Base mainnet)
+version: 3.0.0
 category: marketplace
 tags:
   - x402
+  - marketplace
   - web-scraping
-  - stealth-scraping
-  - burner-wallets
-  - ai-agent-marketplace
+  - brand-new-wallets
+  - zero-knowledge
   - base-blockchain
   - usdc-payments
-  - akamai-bypass
-  - datadome-bypass
+  - agent-escrow
+  - prompt-injection-defense
 homepage: https://x402-plaza-services.onrender.com
 repository: https://github.com/MintMachineHQ/x402-plaza-services
-url: https://x402-plaza-services.onrender.com/mcp
+documentation: https://mintmachinehq.github.io/x402-plaza-services/
