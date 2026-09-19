@@ -1104,6 +1104,16 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        if self.path == "/.well-known/glama.json":
+            _gb = b'{\n  "$schema": "https://glama.ai/mcp/schemas/connector.json",\n  "claim": "glama_claim_hUxNn51-PqmmHxvhBjYwlTcqzwXz3cOI"\n}\n'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(_gb)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(_gb)
+            return
+
         _dp = self.path.split("?")[0]
         if _dp in DISCOVERY_ROUTES:
             _body, _ct = DISCOVERY_ROUTES[_dp]()
