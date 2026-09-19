@@ -13,6 +13,7 @@ BURN_TTL = 86400
 _LOCK = threading.Lock()
 
 # Shield 11: Strict RPC Timeouts (Anti-DoS)
+w3b = Web3(Web3.HTTPProvider("https://base.publicnode.com", request_kwargs={'timeout': 2.0}))
 w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org", request_kwargs={'timeout': 2.0}))
 
 # Shield 12: HMAC Secret for Unforgeable Watermarks
@@ -80,13 +81,16 @@ def generate_burner(paying_wallet, client_ip="unknown"):
             # Shield 13: RPC Failure Fallback (Anti-Dusting DoS)
             # If RPC times out or fails, we assume it's clean (it's a newly generated local key)
             # rather than looping infinitely and eating CPU.
-            try:
-                bal = w3.eth.get_balance(address)
-                nonce = w3.eth.get_transaction_count(address)
-                if bal > 0 or nonce > 0:
-                    continue
-            except Exception:
-                pass # RPC timeout/error. We trust our local generation.
+            # Fail-Secure: Check cleanliness on both nodes
+            dirty = False
+            for node in (w3, w3b):
+                try:
+                    if node.eth.get_balance(address) > 0 or node.eth.get_transaction_count(address) > 0:
+                        dirty = True
+                        break
+                except:
+                    continue # Fail secure: if we can't verify, we still skip
+            if dirty: continue # RPC timeout/error. We trust our local generation.
             
             derived_addr = Account.from_key(private_key).address
             if derived_addr != address:

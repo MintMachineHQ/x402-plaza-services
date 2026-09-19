@@ -771,7 +771,7 @@ class Handler(BaseHTTPRequestHandler):
 
             # === UNIVERSAL SHIELD MATRIX (Runs on ALL tools) ===
             wallet_arg = args.get("wallet", "")
-            client_ip = self.client_address[0] if hasattr(self, 'client_address') else "unknown"
+            client_ip = (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip() or (self.client_address[0] if hasattr(self, 'client_address') else "unknown")
             allowed, shield_resp = plaza_shields.run_shields(wallet_arg, client_ip, tname, args)
             if not allowed:
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(shield_resp, indent=2)}]}}).encode()
@@ -797,7 +797,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
             if tname == "plaza.burner_wallet":
                 wallet = args.get("wallet", "")
-                client_ip = self.client_address[0] if hasattr(self, 'client_address') else "unknown"
+                client_ip = (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip() or (self.client_address[0] if hasattr(self, 'client_address') else "unknown")
                 out = burner_wallets_engine.generate_burner(wallet, client_ip)
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(out, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
