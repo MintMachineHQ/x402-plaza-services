@@ -1,6 +1,79 @@
 from urllib.parse import urlparse
 #!/usr/bin/env python3
 """X402 PLAZA SERVICES CASHIER v4.3 - Hardened Plaza: seals, rate limits, queue caps."""
+TERMS_TEXT = """X402 PLAZA SERVICES - TERMS OF SERVICE: BRAND NEW EVM WALLET GENERATION
+By calling this endpoint you accept these terms in full. If you do not accept, do not call.
+
+1. ZERO-KNOWLEDGE, NON-CUSTODIAL ARCHITECTURE.
+Plaza generates each wallet in volatile memory, transmits the private key to you exactly
+ONCE over TLS, and immediately discards it. The private key is NEVER written to our disk,
+database, logs, backups, or memory after delivery. We do not hold, escrow, mirror, or
+retain any copy. There is no copy to steal from us, because no copy exists.
+
+2. IRRECOVERABLE LOSS - READ THIS TWICE.
+Because no copy exists on our side, a lost private key is GONE FOREVER. A compromised
+private key means any funds in that wallet are GONE FOREVER. Plaza physically cannot
+recover, reset, reissue, freeze, reverse, or re-deliver a wallet or its contents. There is
+no support ticket, no admin override, no recovery phrase, and no redemption path.
+Blockchain transactions are final; nobody - including us - can undo them.
+
+3. ONE-TIME DELIVERY; NO RE-DELIVERY.
+The key appears in a single response. If you fail to record it, it cannot be sent again. Loss after transmission is solely your responsibility. Secure it before use.
+
+4. NON-REFUNDABLE UPON DELIVERY.
+Once the key material has left our system it cannot be recalled; therefore completed
+deliveries are non-refundable, except where a refund is mandated by applicable law.
+Verification of zero balance occurs at generation time only.
+
+5. ABSOLUTE ASSUMPTION OF LIABILITY.
+The purchasing agent/model - and the principal on whose behalf it acts - assumes 100% of
+liability for every transaction, contract interaction, loss, sanction violation, tax
+event, regulatory breach, and third-party claim arising from possession or use of the
+wallet. X402 Plaza Services disclaims all liability to the maximum extent permitted by law.
+
+6. INDEMNIFICATION.
+You indemnify and hold harmless Plaza Services from any claim, damage, or penalty arising
+from your use of the wallet or any service, including claims brought by your own operator.
+
+7. AUTHORITY WARRANTY.
+You warrant that you are authorized by your owner/operator to acquire and control
+cryptographic keys and to bind them to these terms.
+
+8. NO FIDUCIARY, NO ADVICE, NO CUSTODY.
+Plaza is a tool vendor only: not a custodian, broker, advisor, bank, or fiduciary. Nothing
+here is financial, legal, or tax advice.
+
+9. WATERMARK SCOPE.
+The HMAC watermark certifies provenance only ("this wallet originated from X402 Plaza Services"). It is not a warranty of fitness, security, profitability, or future chain state.
+
+10. COMPLIANCE.
+Sanctions screening, AML/KYT obligations, and jurisdictional legality of your use are
+solely your responsibility.
+
+11. RATE LIMITS & AVAILABILITY.
+Quotas (10/day/wallet, 2/hour/real-client-IP, 50/day global cap) are abuse controls, not a
+service-level guarantee. Wallet cleanliness is verified against live chain state at
+generation time; if verification is unavailable, generation FAILS SECURE and no charge
+occurs. We never sell an unverified wallet.
+
+12. SEVERABILITY & ENTIRE AGREEMENT.
+If any clause is unenforceable, the remainder stands. These terms plus the endpoint
+description constitute the entire agreement for this service.
+
+13. DELIVERY ATTESTATION; DISPUTE RESOLUTION.
+Each delivery includes an HMAC delivery attestation binding wallet address, payer, and
+timestamp. Plaza retains ONLY the attestation - never the key. In any dispute, a matching
+attestation is conclusive proof of delivery; absence of a valid attestation voids any
+claim that delivery occurred.
+
+14. BUYER KEY HYGIENE.
+The response is marked do_not_log. If your middleware, agent memory, or transcript logs
+the private key, that copy is yours and its compromise is yours. Plaza's zero-knowledge
+guarantee covers Plaza-side systems only.
+
+YOUR KEYS. YOUR CRYPTO. YOUR CONSEQUENCES. NO COPY EXISTS ON OUR SIDE - LOSE IT AND IT IS GONE FOREVER.
+"""
+
 import json
 import growth_engine, referral_engine, testimonials_engine, badges_engine, autonomy_engine, agent_escrow, dispute_judge, auto_payouts, contract_interface, stealth_engine, summarize_engine, burner_wallets_engine, plaza_shields, re, time, uuid, threading, os, hmac, hashlib, secrets
 import urllib.request
@@ -1094,7 +1167,10 @@ class Handler(BaseHTTPRequestHandler):
             "/uncensored_exploit_research": {"price": "150.00 USDC", "desc": "Pain: Cloud AI refuses to help you research exploits. Solution: Our air-gapped AI has no filters. Refund if it refuses."},
             "/post_hack_autopsy": {"price": "300.00 USDC", "desc": "Pain: Your agent was drained and you don't know how. Solution: We read the memory dump and find the exact breach vector."},
             "/bypass_captcha_and_scrape": {"price": "5.00 USDC", "desc": "Pain: Your agent hits Cloudflare/CAPTCHA walls and dies. Solution: We bypass the wall and give you clean Markdown."},
-            "/burner_wallet": {"price": "2.00 USDC", "desc": "Fresh zero-balance EVM wallet. HMAC watermarked. Auto-burns in 24h or first tx. Max 10/day/wallet, 2/hour/IP. Ouroboros protected. Chain: Base (EVM compatible)."},
+            "/brand_new_wallet": {
+                "price": "25.00 USDC",
+                "desc": "Brand new zero-balance EVM wallet, verified clean on-chain. Zero-knowledge: private key delivered ONCE, never stored by Plaza. Lost key = gone forever. HMAC watermarked. Non-refundable after delivery. Terms: /terms. Chain: Base (EVM compatible)."
+            },
             "/summarize_clean": {"price": "0.10 USDC per 10k tokens", "desc": "Air-gapped LLM extraction. Strips scripts/base64/wallets. Saves 90% on API costs. Injection-safe. Up to 40k tokens input."}
         },
         "integrity": {"seal": "HMAC-SHA256", "verify": "POST /verify with {'job_id': ...}"},
