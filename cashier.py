@@ -156,7 +156,7 @@ def _key_route():
 
 DISCOVERY_ROUTES = {"/llms.txt": _llms_txt, "/llms-full.txt": _llms_full,
     "/robots.txt": _robots, "/sitemap.xml": _sitemap,
-    "/.well-known/agent.json": _agent_card, "/status": _status, "/cron": _cron, "/terms": _terms}
+    "/.well-known/agent.json": _agent_card, "/status": _status, "/cron": _cron}
 try:
     DISCOVERY_ROUTES["/" + open(os.path.join(_HERE, "indexnow_key.txt")).read().strip() + ".txt"] = _key_route
 except Exception: pass
@@ -1144,6 +1144,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, agent_escrow.job_board())
         elif _path == "/how-it-works":
             return self._send(200, autonomy_engine.how_it_works())
+        elif _path == "/terms":
+            return self._send(200, TERMS_TEXT, content_type="text/plain; charset=utf-8")
         self._send(200, {"status": "ok", "plaza": "open"})
 
     def do_POST(self):
