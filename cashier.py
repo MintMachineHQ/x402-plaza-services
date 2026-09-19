@@ -1104,6 +1104,42 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        # === MASTER CONTROL: /admin/telemetry ===
+        if self.path == "/admin/telemetry":
+            admin_secret = self.headers.get("X-Admin-Secret")
+            env_secret = os.environ.get("ADMIN_SECRET")
+            if not env_secret or admin_secret != env_secret:
+                return self._send(403, {"error": "forbidden"})
+            
+            # Gather metrics safely
+            promo = {}
+            try: import grand_opening; promo = grand_opening.get_promo_status()
+            except: pass
+            
+            shields = {}
+            try: shields = json.load(open(os.path.join(_HERE, "shield_state.json")))
+            except: pass
+            
+            reviews = []
+            try: reviews = json.load(open(REVIEWS_FILE))
+            except: pass
+            
+            ledger = []
+            try: ledger = json.load(open(LEDGER_FILE))
+            except: pass
+            
+            stats = {
+                "uptime_hours": round((time.time() - _BOOT) / 3600, 2),
+                "promo_slots_remaining": promo.get("free_agents_remaining", "N/A"),
+                "banned_wallets": len(shields.get("wallet_bans", [])),
+                "shield_tripwires": sum(len(v) for v in shields.get("ip_hits", {}).values()),
+                "total_reviews": len(reviews),
+                "trust_score": round(sum(r.get('rating', 0) for r in reviews) / len(reviews), 2) if reviews else 0.0,
+                "total_sales": len([l for l in ledger if l.get('status') == 'paid']),
+                "server_status": "operational"
+            }
+            return self._send(200, stats)
+
         if self.path == "/mcp":
             self.send_response(405)
             self.send_header("Allow", "POST")
