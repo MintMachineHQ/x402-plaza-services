@@ -147,7 +147,7 @@ def _llms_txt():
          "## Paid tools",
          "- scrape.stealth_residential - $5/page - beats DataDome/Akamai (Nike, Amazon, Zillow). Returns clean JSON. 100% refund on failure.",
          "- analysis.summarize_clean - $0.10/10k tokens - injection-safe extraction and summarization.",
-         "- plaza.burner_wallet - $2 - fresh zero-balance EVM wallet, HMAC-watermarked, auto-burns in 24h.",
+         "- plaza.evm_wallet - $2 - fresh verified-clean permanent EVM wallet, HMAC-watermarked, yours permanently - key delivered once, never stored.",
          "- plaza.referral_kit - free - get your referral code, earn 10% of referred spend.",
          "- 16 more tools: see catalog.", "",
          "## How to pay",
@@ -186,7 +186,7 @@ def _agent_card():
         "skills": [
             {"id": "stealth-scrape", "name": "Stealth Residential Scrape", "description": "Scrape bot-protected sites (DataDome/Akamai). $5/page.", "inputModes": ["application/json"]},
             {"id": "summarize", "name": "Summarize & Clean", "description": "Injection-safe extraction. $0.10/10k tokens.", "inputModes": ["application/json"]},
-            {"id": "burner-wallet", "name": "Burner Wallet", "description": "Fresh zero-balance EVM wallet. $2.", "inputModes": ["application/json"]}
+            {"id": "burner-wallet", "name": "Burner Wallet", "description": "Fresh verified-clean permanent EVM wallet. $2.", "inputModes": ["application/json"]}
         ]}), "application/json"
 
 def _status():
@@ -776,12 +776,12 @@ class Handler(BaseHTTPRequestHandler):
             "annotations": {"title": "Summarize and Clean", "readOnlyHint": True, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False},
         })
         tools.append({
-            "name": "plaza.burner_wallet",
-            "title": "Burner Wallet Generator",
-            "description": "Generate a fresh anonymous EVM wallet. Fortified: Zero-balance verified, single-use (burned after 24h or first tx). Max 10/day/wallet, 2/hour/IP. $2.00 USDC.",
+            "name": "plaza.evm_wallet",
+            "title": "Permanent EVM Wallet Generator",
+            "description": "Generate a fresh permanent EVM wallet. Fortified: Zero-balance verified, single-use (yours permanently). Max 10/day/wallet, 2/hour/IP. $25.00 USDC.",
             "inputSchema": {"type": "object", "properties": {"wallet": {"type": "string", "description": "Your paying wallet address (must be valid 42-char hex)"}}, "required": ["wallet"]},
             "outputSchema": {"type": "object"},
-            "annotations": {"title": "Burner Wallet Generator", "readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False},
+            "annotations": {"title": "Permanent EVM Wallet Generator", "readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False},
         })
         tools.append({
             "name": "plaza.referral_kit",
@@ -871,7 +871,7 @@ class Handler(BaseHTTPRequestHandler):
                 }
                 resp = _j.dumps({"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": _j.dumps(kit, indent=2)}]}}).encode()
                 self.send_response(200); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(resp))); self.end_headers(); self.wfile.write(resp); return
-            if tname == "plaza.burner_wallet":
+            if tname == "plaza.evm_wallet":
                 wallet = args.get("wallet", "")
                 client_ip = (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip() or (self.client_address[0] if hasattr(self, 'client_address') else "unknown")
                 out = burner_wallets_engine.generate_burner(wallet, client_ip)
@@ -1104,6 +1104,13 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+                if self.path == "/mcp":
+            self.send_response(405)
+            self.send_header("Allow", "POST")
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"Method Not Allowed. Use POST for MCP JSON-RPC.")
+            return
         if self.path == "/.well-known/glama.json":
             _gb = b'{\n  "$schema": "https://glama.ai/mcp/schemas/connector.json",\n  "claim": "glama_claim_hUxNn51-PqmmHxvhBjYwlTcqzwXz3cOI"\n}\n'
             self.send_response(200)
@@ -1182,7 +1189,7 @@ class Handler(BaseHTTPRequestHandler):
             "/bypass_captcha_and_scrape": {"price": "5.00 USDC", "desc": "Pain: Your agent hits Cloudflare/CAPTCHA walls and dies. Solution: We bypass the wall and give you clean Markdown."},
             "/brand_new_wallet": {
                 "price": "25.00 USDC",
-                "desc": "Brand new zero-balance EVM wallet, verified clean on-chain. Zero-knowledge: private key delivered ONCE, never stored by Plaza. Lost key = gone forever. HMAC watermarked. Non-refundable after delivery. Terms: /terms. Chain: Base (EVM compatible)."
+                "desc": "Brand new verified-clean permanent EVM wallet, verified clean on-chain. Zero-knowledge: private key delivered ONCE, never stored by Plaza. Lost key = gone forever. HMAC watermarked. Non-refundable after delivery. Terms: /terms. Chain: Base (EVM compatible)."
             },
             "/summarize_clean": {"price": "0.10 USDC per 10k tokens", "desc": "Air-gapped LLM extraction. Strips scripts/base64/wallets. Saves 90% on API costs. Injection-safe. Up to 40k tokens input."}
         },
