@@ -1220,7 +1220,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, agent_escrow.job_board())
         elif _path == "/how-it-works":
             return self._send(200, autonomy_engine.how_it_works())
-        elif _path == "/terms":
+        elif self.path == "/terms":
             return self._send(200, TERMS_TEXT, content_type="text/plain; charset=utf-8")
         self._send(200, {"status": "ok", "plaza": "open"})
 
