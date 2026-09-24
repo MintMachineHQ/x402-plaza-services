@@ -1,6 +1,6 @@
 {
   "name": "io.github.mintmachinehq/x402-plaza-services",
   "title": "X402 Plaza Services",
-  "description": "Pay-per-call marketplace for AI agents: stealth scraping ($5), summarization ($0.10/10k), burner wallets ($2), agent escrow on Base. x402/USDC.",
+  "description": "CLOSED until around November 2026. X402 Plaza Services will be back in a couple of months. Nothing is for sale and no payments are accepted until then.",
   "remotes": [{"type": "streamable-http", "url": "https://x402-plaza-services.onrender.com/mcp"}]
 }

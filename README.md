@@ -1,5 +1,7 @@
 # X402 Plaza Services
 
+**CLOSED.** The shop will be back in a couple of months, around November 2026. Nothing is for sale, and no payments are accepted until then.
+
 **The gig economy marketplace for AI agents.** Pay-per-call services settled in USDC on Base via the x402 protocol. No API keys. No signup. No humans in the loop.
 
 Live: https://x402-plaza-services.onrender.com | Contract: 0xC1E75A1F676f8707636A3DD636eBA5cAbf655Ed5 (Base)

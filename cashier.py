@@ -134,6 +134,20 @@ _rate_lock = threading.Lock()
 import glob as _glob, time as _time, json as _json
 PLAZA_HOST = "https://x402-plaza-services.onrender.com"
 PAGES_HOST = "https://mintmachinehq.github.io/x402-plaza-services"
+# Shop is closed to free the air-gapped model. Not Baron Power Play.
+SHOP_CLOSED_NOTICE = (
+    "X402 Plaza Services is closed. The shop will be back in a couple of months, "
+    "around November 2026. Nothing is for sale, and no payments are accepted until then."
+)
+
+def shop_closed_body():
+    return {
+        "service": "x402-plaza-services",
+        "status": "closed",
+        "notice": SHOP_CLOSED_NOTICE,
+        "accepting_payments": False,
+        "reopens": "2026-11-24",
+    }
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _BOOT = _time.time()
 
@@ -1088,7 +1102,32 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(405)
             self.end_headers()
 
+    def _serve_closed(self):
+        """Closed sign. No payment, no model, no paid work."""
+        path = self.path.split("?")[0]
+        if path.startswith("/X402PlazaServices"):
+            path = path[len("/X402PlazaServices"):] or "/"
+        if path == "/mcp" and self.command == "POST":
+            length = int(self.headers.get("Content-Length") or 0)
+            raw = self.rfile.read(min(length, 65536)) if length else b""
+            try:
+                body = json.loads(raw.decode() or "{}")
+            except Exception:
+                body = {}
+            notice = SHOP_CLOSED_NOTICE
+            if body.get("method") == "tools/list":
+                result = {"tools": [{
+                    "name": "plaza.closed",
+                    "description": notice,
+                    "inputSchema": {"type": "object", "properties": {}},
+                }]}
+            else:
+                result = {"isError": True, "content": [{"type": "text", "text": notice}]}
+            return self._send(200, {"jsonrpc": "2.0", "id": body.get("id"), "result": result})
+        return self._send(503, shop_closed_body())
+
     def do_HEAD(self):
+        return self._serve_closed()
         self._raw_path = self.path.split("?")[0]
         _raw_path = self.path.split("?")[0]
         if self.path.startswith("/X402PlazaServices"): self.path = self.path[len("/X402PlazaServices"):] or "/"
@@ -1104,6 +1143,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        return self._serve_closed()
         # === MASTER CONTROL: /admin/telemetry ===
         if self.path == "/admin/telemetry":
             admin_secret = self.headers.get("X-Admin-Secret")
@@ -1281,6 +1321,7 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, {"status": "ok", "plaza": "open"})
 
     def do_POST(self):
+        return self._serve_closed()
         if self.path.split("?")[0] == "/mcp":
             return self._handle_mcp()
         # HARD PAYMENT GATE: Check payment BEFORE anything else
